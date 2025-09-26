@@ -1,0 +1,10 @@
+{
+    "recommendations": [
+        "DavidAnson.vscode-markdownlint",
+        "ms-vscode.js-debug",
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "ms-vscode.js-debug-companion",
+        "ms-vscode.vscode-js-profile-table"
+    ]
+}

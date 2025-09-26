@@ -1,0 +1,13 @@
+# For documentation and collaborative documents, only PDFs and images should be uploaded.
+# This is because these documents have collaboration features that cannot be
+# properly managed in a version control system like Git.
+# Therefore, only the exported PDF versions of these documents should be included.
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx
+
+# Since Group 21 did upload an Excel file, we will allow it and it only
+!Project1Timesheet.xlsx
