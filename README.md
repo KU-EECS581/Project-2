@@ -25,7 +25,7 @@ The members of Group 20 were assigned with upgrading this existing codebase to a
 - **Quality Assurance & Testing Lead:** Andrew Reyes
 - **Documentation & Communication Lead:** Ty Farrington
 
-## How to play
+## Setup Instructions
 
 ### 1
 
