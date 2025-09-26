@@ -443,7 +443,7 @@ function errorPage(type) {
     playButton.remove();
     //Error Type if-else Block
     if (type == 1) {
-        gameStatus.innerHTML = "Error 01: No Horse Power - Use the 'Reset' Button to reload the page after checking if the 'Images' folder is present in the file."
+        gameStatus.innerHTML = "Error 01: No Horse Power - Use the 'Reset' Button to reload the page after checking if the 'assets/images' folder is present in the file."
     } if (type == 2) {
         gameStatus.innerHTML = "Error 02: Unknown Game End Condition - Use the 'Reset' Button to reload the page."
     }
