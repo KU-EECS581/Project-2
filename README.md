@@ -6,7 +6,7 @@ Minescuffers (more commonly known as minesweeper) is a classic Minesweeper imple
 
 ## Authors
 
-The original authors of this codebase was Group 21:
+The original authors of this codebase were the members of Group 21:
 
 - Alex Carillo
 - Zhang Chen  
@@ -16,7 +16,7 @@ The original authors of this codebase was Group 21:
 
 ### Secondary Authors
 
-Group 20 was assigned with upgrading this codebase to add a new AI solving feature and more:
+The members of Group 20 were assigned with upgrading this existing codebase to add a new AI solving feature and more:
 
 - **Project Coordinator:** Riley Meyerkorth
 - **Backend Developer:** Aiden Burke
@@ -29,11 +29,7 @@ Group 20 was assigned with upgrading this codebase to add a new AI solving featu
 
 ### 1
 
-Clone the repository:
-
-```bash
-git clone https://github.com/yourusername/EECS581-Group21-Project1.git
-```
+Ensure that you are currently located in the root of the repository.
 
 ### 2
 
@@ -41,8 +37,9 @@ Host the website.
 
 There are many ways to host to play, including:
 
-- Opening up the `index.html` file
-- Using a extension such as Live Server on VSCode
+- Opening up the `index.html` file in a browser (***recommended***)
+  - This can be done by simply dragging said file into the tab bar of your browser
+- Using a extension such as [Live Server on VSCode](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer)
 - Hosting it yourself
 
 ## How to Play
