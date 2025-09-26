@@ -37,7 +37,7 @@ Host the website.
 
 There are many ways to host to play, including:
 
-- Opening up the `index.html` file in a browser (***recommended***)
+- Opening up the [`src/index.html`](src/index.html) file in a browser (***recommended***)
   - This can be done by simply dragging said file into the tab bar of your browser
 - Using a extension such as [Live Server on VSCode](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer)
 - Hosting it yourself
