@@ -14,6 +14,7 @@ const ROW_COUNT = 10; // Number of rows in the game grid
 const COL_COUNT = ROW_COUNT; // Number of columns in the game grid (for now, a square grid)
 const ALPHABET = "abcdefghijklmnopqrstuvwxyz".toUpperCase(); // The alphabet in uppercase
 const HORSE_IMAGE_PATH = '../assets/images/horse.webp'; // Path to the horse image
+const AI_MOVE_DELAY_MS = 1000; // Delay in milliseconds between AI moves
 
 // Page "Enum"
 const PAGE_MAIN = 0; // Main Page
@@ -43,6 +44,10 @@ const DIFFICULTY_NONE = -1; // No AI
 const DIFFICULTY_EASY = 0; // Easy Difficulty
 const DIFFICULTY_MEDIUM = 1; // Medium Difficulty
 const DIFFICULTY_HARD = 2; // Hard Difficulty
+
+// Turn "Enum"
+const TURN_PLAYER = 0; // Player's Turn
+const TURN_AI = 1; // AI's Turn
 
 // Error "Enum"
 const ERROR_HORSE = 1; // Horse Error

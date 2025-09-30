@@ -52,7 +52,12 @@ class AI {
      * Makes a move for the AI player.
      */
     makeMove() {
+        // Update AI enabled state and difficulty when making a move
+        this.isEnabled = UI.checkboxEnableAI.checked;
+        this.updateDifficulty();
+        
         // AI logic to make a move
+        if (!this.isEnabled || this.game.state !== STATE_ACTIVE_GAME) return;
 
         switch (this.difficulty) {
             case DIFFICULTY_EASY:
@@ -64,6 +69,10 @@ class AI {
             case DIFFICULTY_HARD:
                 this._hardMove();
                 break;
+            default:
+                // Default to easy move if no valid difficulty
+                this._easyMove();
+                break;
         }
     }
 
@@ -72,6 +81,8 @@ class AI {
      */
     _easyMove() {
         // TODO: Easy difficulty AI logic (ensure all requirements are met)
+        // For now, make a simple random move on an unrevealed, unflagged tile
+        this._makeRandomMove();
     }
 
     /**
@@ -79,6 +90,8 @@ class AI {
      */
     _mediumMove() {
         // TODO: Medium difficulty AI logic (ensure all requirements are met)
+        // For now, make a simple random move on an unrevealed, unflagged tile
+        this._makeRandomMove();
     }
 
     /**
@@ -86,5 +99,49 @@ class AI {
      */
     _hardMove() {
         // TODO: Hard difficulty AI logic (ensure all requirements are met)
+        // For now, make a simple random move on an unrevealed, unflagged tile
+        this._makeRandomMove();
+    }
+
+    /**
+     * Helper method to make a random move (placeholder implementation)
+     * This is a basic implementation for your teammates to improve upon
+     */
+    _makeRandomMove() {
+        const availableTiles = this.game.getAvailableTiles();
+        
+        if (availableTiles.length === 0) {
+            console.warn("AI: No available moves");
+            return;
+        }
+
+        // Pick a random tile from available tiles
+        const randomIndex = Math.floor(Math.random() * availableTiles.length);
+        const selectedTile = availableTiles[randomIndex];
+        
+        // Randomly decide between left click (reveal) or right click (flag)
+        const action = Math.random() < 0.8 ? 'reveal' : 'flag'; // 80% chance to reveal, 20% to flag
+        
+        if (action === 'reveal') {
+            this._makeLeftClick(selectedTile);
+        } else {
+            this._makeRightClick(selectedTile);
+        }
+    }
+
+    /**
+     * Helper method to simulate a left click on a tile (for AI moves)
+     * @param {*} tile The tile to click
+     */
+    _makeLeftClick(tile) {
+        this.game.makeAILeftClick(tile);
+    }
+
+    /**
+     * Helper method to simulate a right click on a tile (for AI moves)
+     * @param {*} tile The tile to flag/unflag
+     */
+    _makeRightClick(tile) {
+        this.game.makeAIRightClick(tile);
     }
 }

@@ -24,6 +24,11 @@ class Game {
     actualFlaggedBombCount = 0; // Number of correctly flagged bombs
     state = STATE_MAIN_MENU; // 0: Main Menu | 1: Active Game | 2: Options | 3: Credits
     isLeftClicked = false; // First Left Click Gate
+    
+    // Turn-based system properties
+    currentTurn = TURN_PLAYER; // Whose turn it is (player starts)
+    turnBasedMode = false; // Whether turn-based mode is enabled
+    onAITurnCallback = null; // Callback function to execute AI turns
 
     /**
      * Initializes game variables for a new game
@@ -34,6 +39,11 @@ class Game {
         this.actualFlaggedBombCount = 0; //Reset actual flagged bomb count
         this.flaggedTiles = []; //Reset flagged tiles
         this.isLeftClicked = false; //Reset first left click gate
+        
+        // Initialize turn-based system
+        this.currentTurn = TURN_PLAYER; // Player always starts
+        this.turnBasedMode = UI.checkboxEnableAI.checked; // Check if AI is enabled
+        
         UI.updateRemainingMinesLabel(this.userFlagCount);
     }
 
@@ -69,6 +79,11 @@ class Game {
         UI.pagePreGame.style.display = 'none'; //Hide the pregame menu
         this.generate(); //generate the x by x board
         this.play(); //start the actual game
+        
+        // Initialize turn display if in turn-based mode
+        if (this.turnBasedMode) {
+            this._updateTurnDisplay();
+        }
     }
 
     /**
@@ -79,6 +94,167 @@ class Game {
         // If the number of flagged tiles equals the number of bomb tiles, and all bomb tiles are flagged, return true
         // TODO: this is a bad way to check win condition.
         return (this.actualFlaggedBombCount === this.bombTiles.length);
+    }
+
+    /**
+     * Checks if it's currently the player's turn
+     * @returns {boolean} true if it's the player's turn
+     */
+    isPlayerTurn() {
+        return !this.turnBasedMode || this.currentTurn === TURN_PLAYER;
+    }
+
+    /**
+     * Checks if it's currently the AI's turn
+     * @returns {boolean} true if it's the AI's turn
+     */
+    isAITurn() {
+        return this.turnBasedMode && this.currentTurn === TURN_AI;
+    }
+
+    /**
+     * Switches turns between player and AI
+     */
+    switchTurn() {
+        if (!this.turnBasedMode) return; // No turn switching if not in turn-based mode
+        
+        this.currentTurn = (this.currentTurn === TURN_PLAYER) ? TURN_AI : TURN_PLAYER;
+        this._updateTurnDisplay();
+        
+        // If it's now the AI's turn, execute AI move after a short delay
+        if (this.currentTurn === TURN_AI) {
+            setTimeout(() => {
+                this._executeAITurn();
+            }, AI_MOVE_DELAY_MS); // 1 second delay for better UX
+        }
+    }
+
+    /**
+     * Updates the UI to show whose turn it is
+     */
+    _updateTurnDisplay() {
+        const remainingBombs = parseInt(UI.bombAmountInput.value, 10) - this.userFlagCount;
+        UI.updateTurnDisplay(this.turnBasedMode, this.currentTurn, remainingBombs);
+    }
+
+    /**
+     * Registers a callback function to handle AI turns
+     * @param {Function} callback The function to call when it's the AI's turn
+     */
+    setAITurnCallback(callback) {
+        this.onAITurnCallback = callback;
+    }
+
+    /**
+     * Clears the AI turn callback
+     */
+    clearAITurnCallback() {
+        this.onAITurnCallback = null;
+    }
+
+    /**
+     * Public method for AI to get all available (unrevealed, unflagged) tiles
+     * @returns {Array} Array of available tile elements
+     */
+    getAvailableTiles() {
+        const availableTiles = [];
+        
+        for (let i = 0; i < this.boardSize; i++) {
+            const tile = document.getElementById("msTile-" + i);
+            if (tile && !tile.revealed && !tile.flagged) {
+                availableTiles.push(tile);
+            }
+        }
+        
+        return availableTiles;
+    }
+
+    /**
+     * Public method for AI to make a move (left click) on a tile
+     * @param {*} tile The tile to reveal
+     * @returns {boolean} true if move was successful, false otherwise
+     */
+    makeAILeftClick(tile) {
+        if (!tile || tile.revealed || tile.flagged) return false;
+        
+        // Handle first click if needed
+        if (!this.isLeftClicked) {
+            this._handleFirstLeftClick(tile);
+        }
+        
+        // Handle bomb click
+        if (tile.bomb === true && tile.flagged === false) {
+            this._handleBombClicked(tile);
+            return true;
+        }
+
+        // Handle safe tile click
+        if (tile.bomb === false && tile.revealed === false && tile.flagged === false) {
+            tile.classList.add('revealed-' + tile.value);
+            tile.revealed = true;
+            if (tile.value == 0) {
+                this.revealAdjacentTiles(tile);
+            }
+        }
+
+        // Check win condition
+        if (this.isWin()) {
+            this.endGame(END_WIN);
+        }
+        
+        return true;
+    }
+
+    /**
+     * Public method for AI to flag/unflag a tile (right click)
+     * @param {*} tile The tile to flag/unflag
+     * @returns {boolean} true if move was successful, false otherwise
+     */
+    makeAIRightClick(tile) {
+        if (!tile || tile.revealed) return false;
+        
+        if (tile.flagged) {
+            // Remove flag
+            tile.flagged = false;
+            tile.classList.remove('flagged');
+            const idx = this.flaggedTiles.indexOf(tile);
+            if (idx > -1) this.flaggedTiles.splice(idx, 1);
+            this.userFlagCount = Math.max(0, this.userFlagCount - 1);
+            if (tile.bomb === true) this.actualFlaggedBombCount = Math.max(0, this.actualFlaggedBombCount - 1);
+            UI.updateRemainingMinesLabel(this.userFlagCount);
+        } else {
+            // Add flag
+            tile.flagged = true;
+            tile.classList.add('flagged');
+            this.flaggedTiles.push(tile);
+            this.userFlagCount++;
+            if (tile.bomb === true) this.actualFlaggedBombCount++;
+            UI.updateRemainingMinesLabel(this.userFlagCount);
+            
+            // Check win condition
+            if (this.isWin()) {
+                this.endGame(END_WIN);
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * Executes an AI turn
+     */
+    _executeAITurn() {
+        if (this.state !== STATE_ACTIVE_GAME || !this.isAITurn()) return;
+        
+        // Call the registered AI callback if available
+        if (this.onAITurnCallback && typeof this.onAITurnCallback === 'function') {
+            this.onAITurnCallback();
+        }
+        
+        // Only switch turns if the game is still active (not ended by AI move)
+        if (this.state === STATE_ACTIVE_GAME) {
+            this.switchTurn();
+        }
     }
 
     /**
@@ -160,8 +336,15 @@ class Game {
      * @param {*} tile 
      */
     _handleActiveGameLeftClick(tile) {
+        // Check if it's player's turn in turn-based mode
+        if (!this.isPlayerTurn()) {
+            console.warn("Left click ignored: not player's turn");
+            return;
+        }
+
         if (tile.bomb == true && tile.flagged == false) { // If a bomb tile is clicked and not flagged
-                this._handleBombClicked(tile);
+            this._handleBombClicked(tile);
+            return; // Exit early since game is over
         }
 
         if (tile.bomb == false && tile.revealed == false && tile.flagged == false) { //if the tile is not a bomb and hasn't been touched yet and is not flagged
@@ -171,6 +354,9 @@ class Game {
             if (tile.value == 0) {
                 this.revealAdjacentTiles(tile); // Reveal adjacent tiles if the value is 0
             }
+            
+            // Switch turns after a successful move in turn-based mode
+            this.switchTurn();
         }
 
         if (this.isWin()){ //Check if all bombs are flagged
@@ -212,6 +398,9 @@ class Game {
         if (tile.bomb === true) this.actualFlaggedBombCount++; //If the flagged tile is a bomb, increment the actual flagged bomb count
         UI.updateRemainingMinesLabel(this.userFlagCount); //Update remaining mine count
 
+        // Switch turns after a successful flag placement in turn-based mode
+        this.switchTurn();
+
         // Check for win condition
         if (this.isWin()) { //Check if all bombs are flagged
             this.endGame(END_WIN); //Win game
@@ -233,6 +422,9 @@ class Game {
         //event.target.classList.remove('flagged'); // Remove flag image   
         //flaggedTiles.splice(flaggedTiles.indexOf(event.target), 1); //Remove from flagged tiles
         UI.updateRemainingMinesLabel(this.userFlagCount); //Update remaining mine count
+        
+        // Switch turns after a successful flag removal in turn-based mode
+        this.switchTurn();
     }
 
     /**
@@ -252,6 +444,12 @@ class Game {
             return; //If not, ignore right click
         }
 
+        // Check if it's player's turn in turn-based mode
+        if (!this.isPlayerTurn()) {
+            console.warn("Right click ignored: not player's turn");
+            return;
+        }
+
         // Check if tile is revealed
         if (tile.revealed) {
             console.warn("Right click ignored: tile is already revealed.");
@@ -264,7 +462,7 @@ class Game {
             return;
         }
         
-        // Otherwise, remove the flag
+        // Otherwise, add the flag
         this._handleRightClickAddFlag(tile);
     }
 
@@ -307,13 +505,31 @@ class Game {
      * @param {*} condition 
      */
     endGame(condition) {
+        this.state = STATE_GAME_OVER; // Set game state to over
+        
         switch (condition) {
             case END_LOSE:
-                UI.setGameStatus("GAME OVER! You hit a bomb!"); // Notify the user they lost
+                if (this.turnBasedMode) {
+                    if (this.currentTurn === TURN_AI) {
+                        UI.setGameStatus("CONGRATULATIONS! AI hit a bomb! You Win!");
+                    } else {
+                        UI.setGameStatus("GAME OVER! You hit a bomb!");
+                    }
+                } else {
+                    UI.setGameStatus("GAME OVER! You hit a bomb!");
+                }
                 this._revealAllBombs(); // Reveal all bombs
                 break;
             case END_WIN:
-                UI.setGameStatus("CONGRATULATIONS! YOU WIN!"); // Notify the user they won
+                if (this.turnBasedMode) {
+                    if (this.currentTurn === TURN_AI) {
+                        UI.setGameStatus("AI WINS! All bombs found by AI!");
+                    } else {
+                        UI.setGameStatus("CONGRATULATIONS! YOU WIN!");
+                    }
+                } else {
+                    UI.setGameStatus("CONGRATULATIONS! YOU WIN!");
+                }
                 break;
             default:
                 UI.errorPage(ERROR_UNKNOWN_END); // Unknown Condition, throw error

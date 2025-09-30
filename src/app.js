@@ -48,6 +48,16 @@ class App {
         UI.enablePlayButton(); // Enable Play Button
         UI.bombAmountInput.style.display = 'none'; // Hide the bomb input
         UI.buttonStart.style.display = 'none'; // Hide the start button
+        
+        // Initialize AI state properly when starting the game
+        this.ai.isEnabled = UI.checkboxEnableAI.checked;
+        this.ai.updateDifficulty();
+        
+        // Register AI turn callback for proper separation of concerns
+        this.game.setAITurnCallback(() => {
+            this.ai.makeMove();
+        });
+        
         this.game.startGame(); // Start the game
     }
 

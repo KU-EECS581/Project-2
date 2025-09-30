@@ -45,6 +45,11 @@ class UIManager {
 
     // Theme
     currentTheme = THEME_DEFAULT;
+
+    constructor() {
+        // Initialize AI checkbox to unchecked state
+        this.checkboxEnableAI.checked = false;
+    }
     
     /**
      * Disables the play button
@@ -95,6 +100,22 @@ class UIManager {
     updateRemainingMinesLabel(userFlagCount = 0) {
         const remaining = Math.max(0, parseInt(this.bombAmountInput.value, 10) - userFlagCount); // Calculate the remaining mines
         this.labelMineNum.innerHTML = remaining; // Update the labelMineNum element
+    }
+
+    /**
+     * Updates the game status with turn information (for turn-based mode)
+     * @param {boolean} isTurnBased Whether the game is in turn-based mode
+     * @param {number} currentTurn The current turn (TURN_PLAYER or TURN_AI)
+     * @param {number} remainingBombs Number of bombs remaining
+     */
+    updateTurnDisplay(isTurnBased, currentTurn, remainingBombs) {
+        if (!isTurnBased) {
+            this.setGameStatus(`Game in progress - ${remainingBombs} bombs remaining`);
+            return;
+        }
+        
+        const turnMessage = currentTurn === TURN_PLAYER ? "Your Turn" : "AI's Turn";
+        this.setGameStatus(`${turnMessage} - ${remainingBombs} bombs remaining`);
     }
 
     /**
