@@ -83,26 +83,41 @@ class Game {
 
         // Iterate over all adjacent tiles
         for (const neighborId of neighbors) { 
-            const neighborTile = document.getElementById("msTile-" + neighborId); //Get the tile element
-            if (neighborTile && !neighborTile.revealed && !neighborTile.bomb) { //If the tile exists, is not revealed, and is not a bomb
-                neighborTile.classList.add('revealed-' + neighborTile.value); // Reveal the tile
-                neighborTile.revealed = true; // Set the tile as revealed
-                if (neighborTile.value == 0) { //If the tile's value is 0
-                    this.revealAdjacentTiles(neighborTile); // Recursively reveal tiles
-                }
-            }
+            // Get the neighbor tile
+            const neighborTile = document.getElementById("msTile-" + neighborId);
+
+            // Check if tile does not exist, is revealed, or is a bomb and skip if so
+            if (!neighborTile || neighborTile.revealed || neighborTile.bomb) continue;
+
+            // Reveal the tile by marking it as such
+            neighborTile.classList.add('revealed-' + neighborTile.value);
+            neighborTile.revealed = true;
+
+            // Check for empty tiles to reveal recursively
+            if (neighborTile.value == 0) this.revealAdjacentTiles(neighborTile);
         }
     }
 
     /**
-     * Main game loop handling user interactions and game state
+     * Initializes game variables for a new game
      */
-    playGame() {
+    _initGame() {
         this.state = STATE_ACTIVE_GAME; //Set the game as Active
         this.userFlagCount = 0; //Reset user flag count
         this.actualFlaggedBombCount = 0; //Reset actual flagged bomb count
         this.flaggedTiles = []; //Reset flagged tiles
-        UI.updateRemainingMinesLabel(this.userFlagCount); //Update remaining mines display
+        this.isLeftClicked = false; //Reset first left click gate
+        UI.updateRemainingMinesLabel(this.userFlagCount);
+    }
+
+    /**
+     * Initializes event listeners for user interactions.
+     * Ensures no duplicate bindings.
+     */
+    _initEventListeners() {
+        // Remove event listeners if they exist (to prevent multiple listeners being added)
+        document.removeEventListener('click', this._handleLeftClick.bind(this));
+        document.removeEventListener('contextmenu', this._handleRightClick.bind(this));
 
         // Add Event Listeners
         document.addEventListener('click', this._handleLeftClick.bind(this));
@@ -110,40 +125,116 @@ class Game {
     }
 
     /**
+     * Main game "loop" handling user interactions and game state
+     * Initializes the game and adds event listeners for user interactions
+     */
+    playGame() {
+        this._initGame();
+        this._initEventListeners();
+    }
+
+    /**
+     * Handles the event when a bomb tile is left-clicked
+     * @param {*} tile 
+     */
+    _handleBombClicked(tile) {
+        tile.classList.add('bomb'); // Add bomb image (NOTE: StackOverflow, geeksforgeeks, and MDN web docs were used for help)
+        this.state = STATE_GAME_OVER; //Disable Game
+        this.endGame(END_LOSE); //End Game
+    }
+
+    /**
+     * Handles the first left click event on the game board.
+     * Check if this is the first click or not so we can generate the bombs
+     * RM: I tried refactoring this to where there is a single source of truth (the game state) and it broke completely. Whatever.
+     * @param {*} tile 
+     */
+    _handleFirstLeftClick(tile) {
+        this.isLeftClicked = true; //change flag
+        //Zhang: added the new parameter and function
+        this.adjacentFCTiles = this._adjacentTiles(tile); //Get all adjacent tiles to the first clicked tile
+        this.loadBomb(tile); //generate all bombs on the board
+        this.calculateTileNumbers(); //calculate the numbers for each tile
+    }
+
+    /**
+     * Handles user clicks during an active game (the active game state)
+     * @param {*} tile 
+     */
+    _handleActiveGameLeftClick(tile) {
+        if (tile.bomb == true && tile.flagged == false) { // If a bomb tile is clicked and not flagged
+                this._handleBombClicked(tile);
+        }
+
+        if (tile.bomb == false && tile.revealed == false && tile.flagged == false) { //if the tile is not a bomb and hasn't been touched yet and is not flagged
+            tile.classList.add('revealed-' + tile.value); // Add revealed image based on value
+            tile.revealed = true; // Set the tile as revealed
+            //Zhang: revealing surrounding tiles instead of just having one tile revealed when clicking
+            if (tile.value == 0) {
+                this.revealAdjacentTiles(tile); // Reveal adjacent tiles if the value is 0
+            }
+        }
+
+        if (this.isWin()){ //Check if all bombs are flagged
+            this.endGame(END_WIN); //Win game
+        }
+        //Otherwise, (aka if it's flagged or revealed) do nothing to it
+    }
+
+    /**
      * Handle left click events on the game board
      * @param {*} event 
      */
     _handleLeftClick(event) {
-        //console.log(isLeftClicked); //test line [DELETE LATER]
-        if (event.target.id && event.target.id.startsWith("msTile-")) {
-            // RM: I tried refactoring this to where there is a single source of truth (the game state) and it broke completely. Whatever.
-            if (!this.isLeftClicked) { //check if this is the first click or not, so we can generate the bombs
-                this.isLeftClicked = true; //change flag
-                //Zhang: added the new parameter and function
-                this.adjacentFCTiles = this._adjacentTiles(event.target); //Get all adjacent tiles to the first clicked tile
-                this.loadBomb(event.target); //generate all bombs on the board
-                this.calculateTileNumbers(); //calculate the numbers for each tile
-            }
-            if (this.state == STATE_ACTIVE_GAME) { //Check if game is active
-                if (event.target.bomb == true && event.target.flagged == false) { //If a bomb tile is clicked and not flagged
-                    event.target.classList.add('bomb'); // Add bomb image (NOTE: StackOverflow, geeksforgeeks, and MDN web docs were used for help)
-                    this.state = STATE_GAME_OVER; //Disable Game
-                    this.endGame(END_LOSE); //End Game
-                }
-                if (event.target.bomb == false && event.target.revealed == false && event.target.flagged == false) { //if the tile is not a bomb and hasn't been touched yet and is not flagged
-                    event.target.classList.add('revealed-' + event.target.value); // Add revealed image based on value
-                    event.target.revealed = true; // Set the tile as revealed
-                    //Zhang: revealing surrounding tiles instead of just having one tile revealed when clicking
-                    if (event.target.value == 0) {
-                        this.revealAdjacentTiles(event.target); // Reveal adjacent tiles if the value is 0
-                    }
-                }
-                if (this.isWin()){ //Check if all bombs are flagged
-                    this.endGame(END_WIN); //Win game
-                }
-                //Otherwise, (aka if it's flagged or revealed) do nothing to it
-            }
+        // Get the tile element
+        const tile = event.target;
+
+        // Check for correct event type
+        if (!tile.id || !tile.id.startsWith("msTile-")) {
+            console.warn("Left click ignored: clicked element is not a game tile.");
+            return;
         }
+
+        // Check for first left click
+        if (!this.isLeftClicked) this._handleFirstLeftClick(tile);
+
+        // Handle active game state
+        if (this.state == STATE_ACTIVE_GAME) this._handleActiveGameLeftClick(tile);
+    }
+
+    /**
+     * Handles the addition of a flag to a tile
+     * @param {*} tile 
+     */
+    _handleRightClickAddFlag(tile) {
+        tile.flagged = true; //set the flag status to true
+        tile.classList.add('flagged'); // Add flag image
+        this.flaggedTiles.push(tile); //Add to flagged tiles
+        this.userFlagCount++; //Increment user flag count
+        if (tile.bomb === true) this.actualFlaggedBombCount++; //If the flagged tile is a bomb, increment the actual flagged bomb count
+        UI.updateRemainingMinesLabel(this.userFlagCount); //Update remaining mine count
+
+        // Check for win condition
+        if (this.isWin()) { //Check if all bombs are flagged
+            this.endGame(END_WIN); //Win game
+        }
+    }
+
+    /**
+     * Handles the removal of a flag from a tile
+     * @param {*} tile 
+     */
+    _handleRightClickRemoveFlag(tile) {
+        tile.flagged = false; //set the flag status to false
+        tile.classList.remove('flagged');
+        const idx = this.flaggedTiles.indexOf(tile); //Find the index of the tile in the flagged tiles array
+        if (idx > -1) this.flaggedTiles.splice(idx, 1);
+        this.userFlagCount = Math.max(0, this.userFlagCount - 1); //Decrement user flag count
+        if (tile.bomb === true) this.actualFlaggedBombCount = Math.max(0, this.actualFlaggedBombCount - 1);
+        //event.target.flagged = false; //set the flag status to false
+        //event.target.classList.remove('flagged'); // Remove flag image   
+        //flaggedTiles.splice(flaggedTiles.indexOf(event.target), 1); //Remove from flagged tiles
+        UI.updateRemainingMinesLabel(this.userFlagCount); //Update remaining mine count
     }
 
     /**
@@ -153,31 +244,30 @@ class Game {
     _handleRightClick(event) {
         event.preventDefault(); // Prevent default context menu
         //used Reddit to find similar function and learn target
-        if (event.target.matches('button') && this.state == STATE_ACTIVE_GAME && this.isLeftClicked) { //Check if game is active
-            const tile = event.target; //Get the tile element
-            if (tile.flagged == false && !tile.revealed) { //Check if tile is already flagged and not revealed yet
-                tile.flagged = true; //set the flag status to true
-                tile.classList.add('flagged'); // Add flag image
-                this.flaggedTiles.push(tile); //Add to flagged tiles
-                this.userFlagCount++; //Increment user flag count
-                if (tile.bomb === true) this.actualFlaggedBombCount++; //If the flagged tile is a bomb, increment the actual flagged bomb count
-                UI.updateRemainingMinesLabel(this.userFlagCount); //Update remaining mine count
-                if (this.isWin()) { //Check if all bombs are flagged
-                    this.endGame(END_WIN); //Win game
-                }
-            } else if (tile.flagged == true && !tile.revealed) { //If the tile is already flagged and not revealed yet
-                tile.flagged = false; //set the flag status to false
-                tile.classList.remove('flagged');
-                const idx = this.flaggedTiles.indexOf(tile); //Find the index of the tile in the flagged tiles array
-                if (idx > -1) this.flaggedTiles.splice(idx, 1);
-                this.userFlagCount = Math.max(0, this.userFlagCount - 1); //Decrement user flag count
-                if (tile.bomb === true) this.actualFlaggedBombCount = Math.max(0, this.actualFlaggedBombCount - 1);
-                //event.target.flagged = false; //set the flag status to false
-                //event.target.classList.remove('flagged'); // Remove flag image   
-                //flaggedTiles.splice(flaggedTiles.indexOf(event.target), 1); //Remove from flagged tiles
-                UI.updateRemainingMinesLabel(this.userFlagCount); //Update remaining mine count
-            }
+
+        // Get the tile element
+        const tile = event.target;
+
+        // Check if game is inactive or wrong element
+        if (!tile.matches('button') || this.state != STATE_ACTIVE_GAME || !this.isLeftClicked) {
+            console.warn("Right click ignored: either not on a tile, game not active, or first left click not done.");
+            return; //If not, ignore right click
         }
+
+        // Check if tile is revealed
+        if (tile.revealed) {
+            console.warn("Right click ignored: tile is already revealed.");
+            return;
+        }
+
+        // Check if tile is already flagged
+        if (tile.flagged == false) { 
+            this._handleRightClickAddFlag(tile);
+            return;
+        }
+        
+        // Otherwise, remove the flag
+        this._handleRightClickRemoveFlag(tile);
     }
 
     /**
@@ -203,23 +293,33 @@ class Game {
         }
     }
 
+    /**
+     * Reveals all bombs on the board (used when the game ends)
+     */
+    _revealAllBombs() {
+        for (let i = 0; i < this.bombTiles.length; i++) { // Reveal all bombs when the game ends
+            if (!this.bombTiles[i].flagged) { //If the bomb tile is not flagged
+                this.bombTiles[i].classList.add('bomb'); // Reveal the bomb
+            }
+        }
+    }
+
     ///======== Game Logic Function
     /**
      * Ends the game and reveals all bombs if the player loses.
      * @param {*} condition 
      */
     endGame(condition) {
-        if (condition == END_LOSE) { //Lose Condition
-            UI.setGameStatus("GAME OVER! You hit a bomb!"); // Notify the user they lost
-            for (let i = 0; i < this.bombTiles.length; i++) { //Reveal all bombs when the game ends
-                if (!this.bombTiles[i].flagged) { //If the bomb tile is not flagged
-                    this.bombTiles[i].classList.add('bomb'); // Reveal the bomb
-                }
-            }
-        } else if (condition == END_WIN) { //Win Condition
-            UI.setGameStatus("CONGRATULATIONS! YOU WIN!"); // Notify the user they won
-        } else {
-            UI.errorPage(ERROR_UNKNOWN_END); //Unknown Condition, throw error
+        switch (condition) {
+            case END_LOSE:
+                UI.setGameStatus("GAME OVER! You hit a bomb!"); // Notify the user they lost
+                this._revealAllBombs(); // Reveal all bombs
+                break;
+            case END_WIN:
+                UI.setGameStatus("CONGRATULATIONS! YOU WIN!"); // Notify the user they won
+                break;
+            default:
+                UI.errorPage(ERROR_UNKNOWN_END); // Unknown Condition, throw error
         }
     }
                 
