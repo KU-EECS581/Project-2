@@ -28,8 +28,12 @@ class UIManager {
     buttonOption = document.getElementById("buttonOption");
     buttonCredit = document.getElementById("buttonCredit");
     buttonTheme = document.getElementById("buttonTheme");
-    buttonSelect = document.getElementById("buttonSelect");
+    buttonStart = document.getElementById("buttonStart");
     buttonReset = document.getElementById("buttonReset");
+
+    // Options elements
+    checkboxEnableAI = document.getElementById("checkboxEnableAI");
+    dropdownDifficultyAI = document.getElementById("dropdownDifficultyAI");
 
     // Setting Elements
     // Each element corresponds to its respective version in the index.html file
@@ -54,6 +58,19 @@ class UIManager {
      */
     enablePlayButton() {
         this.buttonPlay.disabled = false;
+    }
+
+    /**
+     * Handles changes to the AI checkbox.
+     * Disables/enables the AI difficulty dropdown based on checkbox state.
+     * @param {*} event 
+     * @return {boolean} The current state of the checkbox (checked or not)
+     */
+    handleEnabledAICheckboxChanged() {
+        const isChecked = this.checkboxEnableAI.checked;
+        this.dropdownDifficultyAI.disabled = !isChecked;
+
+        return isChecked;
     }
 
     /**
@@ -118,7 +135,7 @@ class UIManager {
 
         //Remove All UI
         this.bombAmountInput.remove();
-        this.buttonSelect.remove();
+        this.buttonStart.remove();
         this.buttonPlay.remove();
 
         //Error Type if-else Block

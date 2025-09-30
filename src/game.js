@@ -24,6 +24,8 @@ class Game {
     actualFlaggedBombCount = 0; // Number of correctly flagged bombs
     state = STATE_MAIN_MENU; // 0: Main Menu | 1: Active Game | 2: Options | 3: Credits
     isLeftClicked = false; // First Left Click Gate
+    isAiEnabled = false; // AI Enabled Setting
+    difficulty = DIFFICULTY_NONE; // AI Difficulty Setting
 
     /**
      * Checks if the win condition is met
@@ -39,7 +41,7 @@ class Game {
      * Starts the game by generating the board and initializing game variables
      */
     startGame() {
-        UI.setGameStatus("There will be " + UI.bombAmountInput.value + " bombs. The Game Is Now In Progress, Good Luck!"); // Tell the user the amount of bombs and say the game has begun
+        UI.setGameStatus("There will be " + UI.bombAmountInput.value + " bombs. The AI bot is " + (this.isAiEnabled ? "enabled" : "disabled") + " (difficulty: " + difficultyToString(this.difficulty) + "). The Game Is Now In Progress, Good Luck!"); // Tell the user the amount of bombs and say the game has begun
         UI.PAGE_GAME_MENU.style.display = 'block'; //Show the game menu
         UI.PAGE_PREGAME_MENU.style.display = 'none'; //Hide the pregame menu
         this.generate(); //generate the x by x board
@@ -114,6 +116,7 @@ class Game {
     _handleLeftClick(event) {
         //console.log(isLeftClicked); //test line [DELETE LATER]
         if (event.target.id && event.target.id.startsWith("msTile-")) {
+            // RM: I tried refactoring this to where there is a single source of truth (the game state) and it broke completely. Whatever.
             if (!this.isLeftClicked) { //check if this is the first click or not, so we can generate the bombs
                 this.isLeftClicked = true; //change flag
                 //Zhang: added the new parameter and function

@@ -11,6 +11,7 @@
 const MIN_BOMBS = 10; // Minimum number of bombs allowed
 const MAX_BOMBS = 20; // Maximum number of bombs allowed
 const ALPHABET = "abcdefghijklmnopqrstuvwxyz".toUpperCase(); // The alphabet in uppercase
+const HORSE_IMAGE_PATH = '../assets/images/horse.webp'; // Path to the horse image
 
 // State "Enum"
 const STATE_MAIN_MENU = 0; // Main Menu State
@@ -27,6 +28,12 @@ const THEME_CLASSIC = 2; // Classic Theme
 // End Game Condition "Enum"
 const END_WIN = 1; // Win Condition
 const END_LOSE = 2; // Lose Condition
+
+// AI Difficulty "Enum"
+const DIFFICULTY_NONE = -1; // No AI
+const DIFFICULTY_EASY = 0; // Easy Difficulty
+const DIFFICULTY_MEDIUM = 1; // Medium Difficulty
+const DIFFICULTY_HARD = 2; // Hard Difficulty
 
 // Error "Enum"
 const ERROR_HORSE = 1; // Horse Error

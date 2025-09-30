@@ -15,15 +15,19 @@ class App {
     game = new Game(); // The game instance
 
     /**
-     * Loads the horse image.
-     * @param {*} url - The URL of the horse image.
+     * Initializes the application.
+     * Primarily checks if the horse image loads correctly.
      */
-    loadHorse(url) { 
+    init() { 
         var horse = new Image();
-        horse.src = url;
+        horse.src = HORSE_IMAGE_PATH;
         if (horse.width == 0) {
-            UI.errorPage(ERROR_HORSE)
-        } else this.returnBack();
+            UI.errorPage(ERROR_HORSE);
+            return;
+        }
+        
+        // Start at the main menu
+        this.returnBack();
     }
 
     /**
@@ -34,10 +38,10 @@ class App {
     }
 
     /**
-     * Selects the bomb amount and starts the game
+     * Starts the start button being clicked
      * @returns {void}
      */
-    select() {
+    handleStartClicked() {
         let bombValue = UI.bombAmountInput.value; // Get the value of the bomb amount input
         if (bombValue < MIN_BOMBS || bombValue > MAX_BOMBS) { // Check if the bomb amount is out of range
             alert(`Please select a bomb value between ${MIN_BOMBS} and ${MAX_BOMBS}.`); // Alert the user
@@ -49,8 +53,38 @@ class App {
         // Zhang: Add a check to ensure bomb amount is within requirement
         UI.enablePlayButton(); // Enable Play Button
         UI.bombAmountInput.style.display = 'none'; // Hide the bomb input
-        UI.buttonSelect.style.display = 'none'; // Hide the select button
+        UI.buttonStart.style.display = 'none'; // Hide the start button
         this.game.startGame(); // Start the game
+    }
+
+    /**
+     * Toggles the AI bot on or off.
+     */
+    toggleBot() {
+        this.game.isAiEnabled = UI.handleEnabledAICheckboxChanged();
+    }
+
+    /**
+     * Updates the AI difficulty based on UI selections.
+     */
+    updateDifficulty() {
+        if (!UI.checkboxEnableAI.checked) {
+            this.game.difficulty = DIFFICULTY_NONE;
+            return;
+        }
+
+        // Switch case to set the difficulty based on dropdown value
+        switch (UI.dropdownDifficultyAI.value) {
+            case DIFFICULTY_EASY:
+                this.game.difficulty = DIFFICULTY_EASY;
+                break;
+            case DIFFICULTY_MEDIUM:
+                this.game.difficulty = DIFFICULTY_MEDIUM;
+                break;
+            case DIFFICULTY_HARD:
+                this.game.difficulty = DIFFICULTY_HARD;
+                break;
+        }
     }
 
     /**
