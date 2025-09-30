@@ -10,7 +10,7 @@ The outputs are the visual display of the game, as well as text prompts to the u
 
 
 UI Functions:
--disableButton(): Disables the play button until a valid bomb amount is selected
+-disablePlayButton(): Disables the play button until a valid bomb amount is selected
 -enableButton(): Enables the play button when a valid bomb amount is selected
 -select(): Validates the bomb amount input and starts the game if valid
 -loadOption(): Loads the options menu
@@ -24,18 +24,17 @@ Gameplay Functions:
 -startGame(): Starts the game by generating the board and initializing game variables
 -playGame(): Main game loop handling user interactions and game state
 -calculateTileNumbers(): Calculates the number of adjacent bombs for each tiles
--checkWinCondition(): Checks if the win condition is met
--remainingMines(): Updates the display of remaining mines
+-isWin(): Checks if the win condition is met
+-updateRemainingMinesLabel(): Updates the display of remaining mines
 -revealAdjacentTiles(tile): Reveals adjacent tiles recursively when a tile with 0 adjacent bombs is clicked
 -adjacentTiles(tile): Returns a list of adjacent tile indices to the given tile
 
 
 Game Logic Functions:
 -endGame(condition): Ends the game based on win or lose condition
--isBomb(tile): Checks if a tile is a bomb
 -loadBomb(clicked_tile): Places bombs on the board ensuring the first clicked tile and its adjacent tiles are safe
 -randomNumber(): Generates a random number for bomb placement
--generateBoard(): Generates the game board with tiles and labels
+-generate(): Generates the game board with tiles and labels
 - changeTheme(): Changes the visual theme of the game
 
 
@@ -44,417 +43,557 @@ Error Handling Functions:
 - loadHorse(url): Checks for "load bearing horse"
 */
 
-//Global Variables
+// Global Variables
+const MIN_BOMBS = 10; // Minimum number of bombs allowed
+const MAX_BOMBS = 20; // Maximum number of bombs allowed
+const ALPHABET = "abcdefghijklmnopqrstuvwxyz".toUpperCase(); // For columns
 
-//Menu Elements
-//Each menu corresponds to its div in the index.html file
-const MAIN_MENU = document.getElementById("mainPage");
-const GAME_MENU = document.getElementById("gamePage");
-const OPTION_MENU = document.getElementById("optionPage");
-const CREDIT_MENU = document.getElementById("creditPage");
-const PREGAME_MENU = document.getElementById("preGamePage");
-let currentTheme = 0; //0: SCUFF_STYLE | 1: DARK_STYLE | 2: CLASSIC_STYLE
-let gameState = 0; //0: MAIN_MENU | 1: GAME_MENU | 2: OPTION_MENU | 3: CREDITS_MENU
+// State "Enum"
+const STATE_MAIN_MENU = 0; // Main Menu State
+const STATE_ACTIVE_GAME = 1;
+const STATE_GAME_OVER = 2; // Game Over State
+const STATE_OPTIONS = 3; // Options Menu State
+const STATE_CREDITS = 4; // Credits Menu State
 
-//Buttons
-//Each button corresponds to its element in the index.html file
-const playButton = document.getElementById("playButton");
-const optionButton = document.getElementById("optionButton");
-const creditButton = document.getElementById("creditButton");
-const themeButton = document.getElementById("themeButton");
-const selectButton = document.getElementById("selectButton");
-const resetButton = document.getElementById("resetButton");
+// Theme "Enum"
+const THEME_DEFAULT = 0; // Default Theme
+const THEME_DARK = 1; // Dark Theme
+const THEME_CLASSIC = 2; // Classic Theme
 
-//Setting Elements
-//Each element corresponds to its respective version in the index.html file
-const board = document.getElementById("board");
-const bombAmount = document.getElementById("bombAmount");
-const gameStatus = document.getElementById("gameStatus");
-const msTiles = document.querySelectorAll("#msTile");
-const mineNum = document.getElementById("mineNum");
+// End Game Condition "Enum"
+const END_WIN = 1; // Win Condition
+const END_LOSE = 2; // Lose Condition
 
+// Error "Enum"
+const ERROR_HORSE = 1; // Horse Error
+const ERROR_UNKNOWN_END = 2; // Unknown End Condition Error
 
-//In-Game Elements
-let bombTiles=[]; //list of tiles with bombs
-let safeTiles=[]; //list of tiles without bombs
-let flaggedTiles=[]; //list of flagged tiles
-let adjacentFCTiles=[]; //list of adjacent tiles to first clicked tile
-let boardSize = 0; //Size of board
-let userFlagCount = 0; //Number of flags placed by user
-let actualFlaggedBombCount = 0; //Number of correctly flagged bombs
+///====== UIManager "singleton"
+/**
+ * Added by RM to handle all UI related functions and 
+ * A "singleton".
+ */
+class UIManager {
+    // Menu Elements
+    // Each menu corresponds to its div in the index.html file
+    PAGE_MAIN_MENU = document.getElementById("pageMain");
+    PAGE_GAME_MENU = document.getElementById("pageGame");
+    PAGE_OPTION_MENU = document.getElementById("pageOptions");
+    PAGE_CREDIT_MENU = document.getElementById("pageCredits");
+    PAGE_PREGAME_MENU = document.getElementById("pagePreGame");
 
+    // Buttons
+    // Each button corresponds to its element in the index.html file
+    buttonPlay = document.getElementById("buttonPlay");
+    buttonOption = document.getElementById("buttonOption");
+    buttonCredit = document.getElementById("buttonCredit");
+    buttonTheme = document.getElementById("buttonTheme");
+    buttonSelect = document.getElementById("buttonSelect");
+    buttonReset = document.getElementById("buttonReset");
 
-//UI Section
-//Disable Function
-function disableButton() {
-    playButton.disabled = true; //Disable Play Button
-}
+    // Setting Elements
+    // Each element corresponds to its respective version in the index.html file
+    board = document.getElementById("divBoard");
+    bombAmountInput = document.getElementById("bombAmount");
+    labelGameStatus = document.getElementById("labelGameStatus");
+    msTiles = document.querySelectorAll("#msTile");
+    labelMineNum = document.getElementById("labelMineNum");
 
-//Enable Function
-function select() {
-    let bombValue = bombAmount.value; //Get the value of the bomb amount input
-    //Zhang: Add a check to ensure bomb amount is within requirement
-    if (bombValue >= 10 && bombValue <= 20) { //Check if the bomb amount is between 10 and 20
-        playButton.disabled = false; //Enable Play Button
-        bombAmount.style.display = 'none'; //Hide the bomb input
-        selectButton.style.display = 'none'; //Hide the select button
-        startGame(); //Start the game
-    } else { //If invalid input
-        alert("Please select a bomb value between 10 and 20."); //Alert the user
-        playButton.disabled = true; //Disable Play Button
-        gameStatus.innerHTML = "Please select a bomb value between 10 and 20."; //Update the notification
-    }
-}
-
-//Options Function
-function loadOption() {
-    gameStatus.innerHTML = ''; //Clear the gameStatus
-    gameState = 2; //Set the gameState to Options
-    //Hide all unimportant menus, show only options
-    MAIN_MENU.style.display = 'none'; 
-    GAME_MENU.style.display = 'none';
-    OPTION_MENU.style.display = 'block';
-    CREDIT_MENU.style.display = 'none';
-    PREGAME_MENU.style.display = 'none';
-}
-
-//Credits Function
-function loadCredit() {
-    gameStatus.innerHTML = ''; //Clear the gameStatus
-    gameState = 3; //Set the gameState to Credits
-    //Hide all unimportant menus, show only credits
-    MAIN_MENU.style.display = 'none';
-    GAME_MENU.style.display = 'none';
-    OPTION_MENU.style.display = 'none';
-    CREDIT_MENU.style.display = 'block';
-    PREGAME_MENU.style.display = 'none';
-}
-
-//Back Function
-function returnBack() {
-    gameStatus.innerHTML = ''; //Clear the gameStatus
-    gameState = 0; //Set the gameState to Main Menu
-    //Hide all unimportant menus, go back to main menu
-    MAIN_MENU.style.display = 'block';
-    GAME_MENU.style.display = 'none';
-    OPTION_MENU.style.display = 'none';
-    CREDIT_MENU.style.display = 'none';
-    PREGAME_MENU.style.display = 'none';
-}
-
-//Reset Function
-function resetPage() {
-    window.location.reload() //Reload the page
-}
-
-
-//Gameplay Section
-//Load Game Function
-function loadGame() {
-    //Load the game page and show only the pregame menu
-    MAIN_MENU.style.display = 'none';
-    OPTION_MENU.style.display = 'none';
-    CREDIT_MENU.style.display = 'none';
-    PREGAME_MENU.style.display = 'block';
-    gameStatus.innerHTML = ""; //Clear the notification
-}
-
-function startGame(){
-    gameStatus.innerHTML = "There will be " + bombAmount.value + " bombs. The Game Is Now In Progress, Good Luck!"; //Tell the user the amount of bombs and say the game has begun
-    GAME_MENU.style.display = 'block'; //Show the game menu
-    PREGAME_MENU.style.display = 'none'; //Hide the pregame menu
-    generateBoard(); //generate the x by x board
-    playGame(); //start the actual game
-}
-
-function checkWinCondition() {
-    return (actualFlaggedBombCount === bombTiles.length); //If the number of flagged tiles equals the number of bomb tiles, and all bomb tiles are flagged, return true
-}
-
-function remainingMines(){
-    const remaining = Math.max(0, parseInt(bombAmount.value, 10) - userFlagCount); //Calculate the remaining mines
-    mineNum.innerHTML = remaining; //Update the mineNum element
-}
-//Zhang: implementation for revealing adjacent tile, logic is similar to calculateTileNumbers, but this time use recursive
-//to keep revealing tiles until all safe tiles are uncovered
-function revealAdjacentTiles(tile) {
-    const tileId = parseInt(tile.id.split('-')[1]); //Get the number ID of the tile
-    const leftEdge = (tileId % 10 === 0); //Check if it's on the left edge
-    const rightEdge = (tileId % 10 === 9); //Check if it's on the right edge
-
-    const neighbors = []; //hold adjacent tile
-
-    if (tileId >= 10) { //If not on the top row
-        if (!leftEdge) neighbors.push(tileId - 11); // Top-left
-        neighbors.push(tileId - 10); // Top
-        if (!rightEdge) neighbors.push(tileId - 9); // Top-right
-    }
-    if (!leftEdge) neighbors.push(tileId - 1); // Left
-    if (!rightEdge) neighbors.push(tileId + 1); // Right
-    if (tileId < boardSize - 10) { //If not on the bottom row
-        if (!leftEdge) neighbors.push(tileId + 9); // Bottom-left
-        neighbors.push(tileId + 10); // Bottom
-        if (!rightEdge) neighbors.push(tileId + 11); // Bottom-right
+    // Theme
+    currentTheme = THEME_DEFAULT;
+    
+    /**
+     * Disables the play button
+     */
+    disablePlayButton() {
+        this.buttonPlay.disabled = true;
     }
 
-    for (const neighborId of neighbors) { //For each adjacent tile
-        const neighborTile = document.getElementById("msTile-" + neighborId); //Get the tile element
-        if (neighborTile && !neighborTile.revealed && !neighborTile.bomb) { //If the tile exists, is not revealed, and is not a bomb
-            neighborTile.classList.add('revealed-' + neighborTile.value); // Reveal the tile
-            neighborTile.revealed = true; // Set the tile as revealed
-            if (neighborTile.value == 0) { //If the tile's value is 0
-                revealAdjacentTiles(neighborTile); // Recursively reveal tiles
-            }
+    /**
+     * Enables the play button
+     */
+    enablePlayButton() {
+        this.buttonPlay.disabled = false;
+    }
+
+    /**
+     * Sets the game status message
+     * @param {*} message
+     */
+    setGameStatus(message) {
+        this.labelGameStatus.innerHTML = message;
+    }
+
+    /**
+     * Sets the title message
+     * @param {*} message
+     */
+    setTitle(message) {
+        document.getElementById("labelTitle").innerHTML = message;
+    }
+
+    /**
+     * Updates the display of remaining mines
+     */
+    updateRemainingMinesLabel(userFlagCount = 0) {
+        const remaining = Math.max(0, parseInt(this.bombAmountInput.value, 10) - userFlagCount); // Calculate the remaining mines
+        this.labelMineNum.innerHTML = remaining; // Update the labelMineNum element
+    }
+
+    /**
+     * Changes the visual theme of the game
+     */
+    changeTheme() {
+        let theme = document.body; //Get the body element
+        this.currentTheme++; //Increment the theme
+        if (this.currentTheme == THEME_CLASSIC+1) this.currentTheme = THEME_DEFAULT; //Reset if out of bounds
+
+        //Theme Toggle
+        switch (this.currentTheme) {
+            case THEME_DEFAULT:
+                theme.classList.toggle("dark-mode");
+                theme.classList.toggle("classic-mode");
+                this.buttonTheme.innerHTML = "Default Theme";
+                this.setGameStatus("Theme changed to Default Theme");
+                break;
+            case THEME_DARK:
+                theme.classList.toggle("dark-mode");
+                this.buttonTheme.innerHTML = "Dark Theme";
+                this.setGameStatus("Theme changed to Dark Theme");
+                break;
+            case THEME_CLASSIC:
+                theme.classList.toggle("classic-mode");
+                this.buttonTheme.innerHTML = "Classic Theme";
+                this.setGameStatus("Theme changed to Classic Theme");
+                break;
+        }
+    }
+
+    /**
+     * Handles error display and UI changes based on the error type.
+     * @param {*} type The type of error to display.
+     */
+    errorPage(type) {
+        this.setTitle("Error Detected");
+
+        //Remove All UI
+        this.bombAmountInput.remove();
+        this.buttonSelect.remove();
+        this.buttonPlay.remove();
+
+        //Error Type if-else Block
+        switch (type) {
+            case ERROR_HORSE:
+                this.setGameStatus("Image not detected. Please ensure the '../assets/images' folder is present in the file directory.");
+                break;
+            case ERROR_UNKNOWN_END:
+                this.setGameStatus("Error 02: Unknown Game End Condition - Use the 'Reset' Button to reload the page.");
+                break;
         }
     }
 }
-function adjacentTiles(tile) { //Get all adjacent tiles to the first clicked tile
-    const tileId = parseInt(tile.id.split('-')[1]); //Get the number ID of the tile
-    const leftEdge = (tileId % 10 === 0); //Check if it's on the left edge
-    const rightEdge = (tileId % 10 === 9); //Check if it's on the right edge
-    const neighbors = []; //hold adjacent tile
-    if (tileId >= 10) { //If not on the top row
-        if (!leftEdge) neighbors.push(tileId - 11); //northwest
-        neighbors.push(tileId - 10); //north
-        if (!rightEdge) neighbors.push(tileId - 9); //northeasst
-    }
-    if (!leftEdge) neighbors.push(tileId - 1); //west
-    if (!rightEdge) neighbors.push(tileId + 1); //east
-    if (tileId < boardSize - 10) { //If not on the bottom row
-        if (!leftEdge) neighbors.push(tileId + 9); //southwest
-        neighbors.push(tileId + 10); //south
-        if (!rightEdge) neighbors.push(tileId + 11); //southeast
-    }
-    return neighbors; //return the list of adjacent tiles
-}
 
-//Play Function
-function playGame() {
-    let firstLeftClick = 0; //First Left Click Gate
-    gameState = 1; //Set the game as Active
-    randomNumber(boardSize); //Generate random numbers for bomb placement
-    userFlagCount = 0; //Reset user flag count
-    actualFlaggedBombCount = 0; //Reset actual flagged bomb count
-    flaggedTiles = []; //Reset flagged tiles
-    mineNum.innerHTML = bombAmount.value; //Set the mineNum element to the bomb amount
-    remainingMines(); //Update the remaining mines display
-    //Left Click Listener
-    document.addEventListener('click', tileIdentify => { //used Reddit to find similar function and learn target
-        console.log(firstLeftClick); //test line [DELETE LATER]
-        if (tileIdentify.target.id && tileIdentify.target.id.startsWith("msTile-")) {
-            if (firstLeftClick == 0) { //check if this is the first click or not, so we can generate the bombs
-                firstLeftClick = 1; //change flag
-                //Zhang: added the new parameter and function
-                adjacentFCTiles = adjacentTiles(tileIdentify.target); //Get all adjacent tiles to the first clicked tile
-                loadBomb(tileIdentify.target); //generate all bombs on the board
-                calculateTileNumbers(); //calculate the numbers for each tile
-            }
-            if (gameState == 1) { //Check if game is active
-                if (tileIdentify.target.bomb == true && tileIdentify.target.flagged == false) { //If a bomb tile is clicked and not flagged
-                    tileIdentify.target.classList.add('bomb'); // Add bomb image (NOTE: StackOverflow, geeksforgeeks, and MDN web docs were used for help)
-                    gameState = 0; //Disable Game
-                    endGame(1); //End Game
+const UI = new UIManager();
+
+/**
+ * Added by RM to hold game state and elements.
+ * A "singleton".
+ */
+class Game {
+    // In-Game Elements
+    bombTiles = []; // list of tiles with bombs
+    safeTiles = []; // list of tiles without bombs
+    flaggedTiles = []; // list of flagged tiles
+    adjacentFCTiles = []; // list of adjacent tiles to first clicked tile
+    boardSize = 0; // Size of board
+    userFlagCount = 0; // Number of flags placed by user
+    actualFlaggedBombCount = 0; // Number of correctly flagged bombs
+    state = STATE_MAIN_MENU; // 0: Main Menu | 1: Active Game | 2: Options | 3: Credits
+    isLeftClicked = false; // First Left Click Gate
+
+    /**
+     * Checks if the win condition is met
+     * @returns true if the win condition is met, false otherwise
+     */
+    isWin() {
+        // If the number of flagged tiles equals the number of bomb tiles, and all bomb tiles are flagged, return true
+        // TODO: this is a bad way to check win condition.
+        return (this.actualFlaggedBombCount === this.bombTiles.length);
+    }
+
+    /**
+     * Starts the game by generating the board and initializing game variables
+     */
+    startGame() {
+        UI.setGameStatus("There will be " + UI.bombAmountInput.value + " bombs. The Game Is Now In Progress, Good Luck!"); // Tell the user the amount of bombs and say the game has begun
+        UI.PAGE_GAME_MENU.style.display = 'block'; //Show the game menu
+        UI.PAGE_PREGAME_MENU.style.display = 'none'; //Hide the pregame menu
+        this.generate(); //generate the x by x board
+        this.playGame(); //start the actual game
+    }
+
+    /**
+     * Gets all adjacent tiles to the first clicked tile
+     * @param {*} tile 
+     * @returns 
+     */
+    _adjacentTiles(tile) { //Get all adjacent tiles to the first clicked tile
+        const tileId = parseInt(tile.id.split('-')[1]); //Get the number ID of the tile
+        const leftEdge = (tileId % 10 === 0); //Check if it's on the left edge
+        const rightEdge = (tileId % 10 === 9); //Check if it's on the right edge
+        const neighbors = []; //hold adjacent tile
+        if (tileId >= 10) { //If not on the top row
+            if (!leftEdge) neighbors.push(tileId - 11); //northwest
+            neighbors.push(tileId - 10); //north
+            if (!rightEdge) neighbors.push(tileId - 9); //northeasst
+        }
+        if (!leftEdge) neighbors.push(tileId - 1); //west
+        if (!rightEdge) neighbors.push(tileId + 1); //east
+        if (tileId < this.boardSize - 10) { //If not on the bottom row
+            if (!leftEdge) neighbors.push(tileId + 9); //southwest
+            neighbors.push(tileId + 10); //south
+            if (!rightEdge) neighbors.push(tileId + 11); //southeast
+        }
+        return neighbors; //return the list of adjacent tiles
+    }
+
+    /**
+     * Reveals all adjacent tiles recursively if they are not bombs.
+     * Zhang: implementation for revealing adjacent tile, logic is similar to calculateTileNumbers, but this time use recursive to keep revealing tiles until all safe tiles are uncovered
+     * @param {*} tile
+     */
+    revealAdjacentTiles(tile) {
+        const neighbors = this._adjacentTiles(tile); // Get all adjacent tiles
+
+        // Iterate over all adjacent tiles
+        for (const neighborId of neighbors) { 
+            const neighborTile = document.getElementById("msTile-" + neighborId); //Get the tile element
+            if (neighborTile && !neighborTile.revealed && !neighborTile.bomb) { //If the tile exists, is not revealed, and is not a bomb
+                neighborTile.classList.add('revealed-' + neighborTile.value); // Reveal the tile
+                neighborTile.revealed = true; // Set the tile as revealed
+                if (neighborTile.value == 0) { //If the tile's value is 0
+                    this.revealAdjacentTiles(neighborTile); // Recursively reveal tiles
                 }
-                if (tileIdentify.target.bomb == false && tileIdentify.target.revealed == false && tileIdentify.target.flagged == false) { //if the tile is not a bomb and hasn't been touched yet and is not flagged
-                    tileIdentify.target.classList.add('revealed-' + tileIdentify.target.value); // Add revealed image based on value
-                    tileIdentify.target.revealed = true; // Set the tile as revealed
+            }
+        }
+    }
+
+    /**
+     * Main game loop handling user interactions and game state
+     */
+    playGame() {
+        this.state = STATE_ACTIVE_GAME; //Set the game as Active
+        this.userFlagCount = 0; //Reset user flag count
+        this.actualFlaggedBombCount = 0; //Reset actual flagged bomb count
+        this.flaggedTiles = []; //Reset flagged tiles
+        UI.updateRemainingMinesLabel(this.userFlagCount); //Update remaining mines display
+
+        // Add Event Listeners
+        document.addEventListener('click', this._handleLeftClick.bind(this));
+        document.addEventListener('contextmenu', this._handleRightClick.bind(this));
+    }
+
+    /**
+     * Handle left click events on the game board
+     * @param {*} event 
+     */
+    _handleLeftClick(event) {
+        //console.log(isLeftClicked); //test line [DELETE LATER]
+        if (event.target.id && event.target.id.startsWith("msTile-")) {
+            if (!this.isLeftClicked) { //check if this is the first click or not, so we can generate the bombs
+                this.isLeftClicked = true; //change flag
+                //Zhang: added the new parameter and function
+                this.adjacentFCTiles = this._adjacentTiles(event.target); //Get all adjacent tiles to the first clicked tile
+                this.loadBomb(event.target); //generate all bombs on the board
+                this.calculateTileNumbers(); //calculate the numbers for each tile
+            }
+            if (this.state == STATE_ACTIVE_GAME) { //Check if game is active
+                if (event.target.bomb == true && event.target.flagged == false) { //If a bomb tile is clicked and not flagged
+                    event.target.classList.add('bomb'); // Add bomb image (NOTE: StackOverflow, geeksforgeeks, and MDN web docs were used for help)
+                    this.state = STATE_GAME_OVER; //Disable Game
+                    this.endGame(END_LOSE); //End Game
+                }
+                if (event.target.bomb == false && event.target.revealed == false && event.target.flagged == false) { //if the tile is not a bomb and hasn't been touched yet and is not flagged
+                    event.target.classList.add('revealed-' + event.target.value); // Add revealed image based on value
+                    event.target.revealed = true; // Set the tile as revealed
                     //Zhang: revealing surrounding tiles instead of just having one tile revealed when clicking
-                    if (tileIdentify.target.value == 0) {
-                        revealAdjacentTiles(tileIdentify.target); // Reveal adjacent tiles if the value is 0
+                    if (event.target.value == 0) {
+                        this.revealAdjacentTiles(event.target); // Reveal adjacent tiles if the value is 0
                     }
                 }
-                if (checkWinCondition()){ //Check if all bombs are flagged
-                    endGame(2); //Win game
+                if (this.isWin()){ //Check if all bombs are flagged
+                    this.endGame(END_WIN); //Win game
                 }
                 //Otherwise, (aka if it's flagged or revealed) do nothing to it
             }
         }
-    });
-    //Right Click Listener
-    document.addEventListener('contextmenu', tileIdentify => { //used Reddit to find similar function and learn target
-        if (tileIdentify.target.matches('button')) {
-            if (gameState == 1 && firstLeftClick==1) { //Check if game is active
-                const tile = tileIdentify.target; //Get the tile element
-                if (tile.flagged == false && !tile.revealed) { //Check if tile is already flagged and not revealed yet
-                    tile.flagged = true; //set the flag status to true
-                    tile.classList.add('flagged'); // Add flag image
-                    flaggedTiles.push(tile); //Add to flagged tiles
-                    userFlagCount++; //Increment user flag count
-                    if (tile.bomb === true) actualFlaggedBombCount++; //If the flagged tile is a bomb, increment the actual flagged bomb count
-                    remainingMines(); //Update remaining mine count
-                    if (checkWinCondition()) { //Check if all bombs are flagged
-                        endGame(2); //Win game
-                    }
-                } else if (tile.flagged == true && !tile.revealed) { //If the tile is already flagged and not revealed yet
-                    tile.flagged = false; //set the flag status to false
-                    tile.classList.remove('flagged');
-                    const idx = flaggedTiles.indexOf(tile); //Find the index of the tile in the flagged tiles array
-                    if (idx > -1) flaggedTiles.splice(idx, 1);
-                    userFlagCount = Math.max(0, userFlagCount - 1); //Decrement user flag count
-                    if (tile.bomb === true) actualFlaggedBombCount = Math.max(0, actualFlaggedBombCount - 1);
-                    //tileIdentify.target.flagged = false; //set the flag status to false
-                    //tileIdentify.target.classList.remove('flagged'); // Remove flag image   
-                    //flaggedTiles.splice(flaggedTiles.indexOf(tileIdentify.target), 1); //Remove from flagged tiles
-                    remainingMines(); //Update remaining mine count
+    }
+
+    /**
+     * Handle right click events on the game board
+     * @param {*} event 
+     */
+    _handleRightClick(event) {
+        event.preventDefault(); // Prevent default context menu
+        //used Reddit to find similar function and learn target
+        if (event.target.matches('button') && this.state == STATE_ACTIVE_GAME && this.isLeftClicked) { //Check if game is active
+            const tile = event.target; //Get the tile element
+            if (tile.flagged == false && !tile.revealed) { //Check if tile is already flagged and not revealed yet
+                tile.flagged = true; //set the flag status to true
+                tile.classList.add('flagged'); // Add flag image
+                this.flaggedTiles.push(tile); //Add to flagged tiles
+                this.userFlagCount++; //Increment user flag count
+                if (tile.bomb === true) this.actualFlaggedBombCount++; //If the flagged tile is a bomb, increment the actual flagged bomb count
+                UI.updateRemainingMinesLabel(this.userFlagCount); //Update remaining mine count
+                if (this.isWin()) { //Check if all bombs are flagged
+                    this.endGame(END_WIN); //Win game
+                }
+            } else if (tile.flagged == true && !tile.revealed) { //If the tile is already flagged and not revealed yet
+                tile.flagged = false; //set the flag status to false
+                tile.classList.remove('flagged');
+                const idx = this.flaggedTiles.indexOf(tile); //Find the index of the tile in the flagged tiles array
+                if (idx > -1) this.flaggedTiles.splice(idx, 1);
+                this.userFlagCount = Math.max(0, this.userFlagCount - 1); //Decrement user flag count
+                if (tile.bomb === true) this.actualFlaggedBombCount = Math.max(0, this.actualFlaggedBombCount - 1);
+                //event.target.flagged = false; //set the flag status to false
+                //event.target.classList.remove('flagged'); // Remove flag image   
+                //flaggedTiles.splice(flaggedTiles.indexOf(event.target), 1); //Remove from flagged tiles
+                UI.updateRemainingMinesLabel(this.userFlagCount); //Update remaining mine count
+            }
+        }
+    }
+
+    /**
+     * Zhang: Function to calculate the number of adjacent bombs for each tile
+     */
+    calculateTileNumbers(){
+        for (let i = 0; i < this.boardSize; i++){ //For each tile on the board
+            let tile = document.getElementById("msTile-"+ i); //Get the tile element
+            if (!tile.bomb){ //If the tile is not a bomb
+                let adjacentBombs = 0; //Counter for adjacent bombs
+                const leftEdge = (i % 10 === 0); //Check if it's on the left edge
+                const rightEdge = (i % 10 === 9); //Check if it's on the right edge
+                if (i > 9 && !leftEdge && document.getElementById("msTile-"+ (i-11)).bomb) adjacentBombs++; //top-left
+                if (i > 9 && document.getElementById("msTile-"+ (i-10)).bomb) adjacentBombs++; //top
+                if (i > 9 && !rightEdge && document.getElementById("msTile-"+ (i-9)).bomb) adjacentBombs++; //top-right
+                if (!leftEdge && document.getElementById("msTile-"+ (i-1)).bomb) adjacentBombs++; //left
+                if (!rightEdge && document.getElementById("msTile-"+ (i+1)).bomb) adjacentBombs++; //right
+                if (i < this.boardSize - 10 && !leftEdge && document.getElementById("msTile-"+ (i+9)).bomb) adjacentBombs++; //bottom-left
+                if (i < this.boardSize - 10 && document.getElementById("msTile-"+ (i+10)).bomb) adjacentBombs++; //bottom
+                if (i < this.boardSize - 10 && !rightEdge && document.getElementById("msTile-"+ (i+11)).bomb) adjacentBombs++; //bottom-right
+                tile.value = adjacentBombs; //Set the tile's value to the number of adjacent bombs
+            }
+        }
+    }
+
+    ///======== Game Logic Function
+    /**
+     * Ends the game and reveals all bombs if the player loses.
+     * @param {*} condition 
+     */
+    endGame(condition) {
+        if (condition == END_LOSE) { //Lose Condition
+            UI.setGameStatus("GAME OVER! You hit a bomb!"); // Notify the user they lost
+            for (let i = 0; i < this.bombTiles.length; i++) { //Reveal all bombs when the game ends
+                if (!this.bombTiles[i].flagged) { //If the bomb tile is not flagged
+                    this.bombTiles[i].classList.add('bomb'); // Reveal the bomb
                 }
             }
-        }
-    });
-}
-//Zhang: Function to calculate the number of adjacent bombs for each tile
-function calculateTileNumbers(){
-    for (let i = 0; i < boardSize; i++){ //For each tile on the board
-        let tile = document.getElementById("msTile-"+ i); //Get the tile element
-        if (!tile.bomb){ //If the tile is not a bomb
-            let adjacentBombs = 0; //Counter for adjacent bombs
-            const leftEdge = (i % 10 === 0); //Check if it's on the left edge
-            const rightEdge = (i % 10 === 9); //Check if it's on the right edge
-            if (i > 9 && !leftEdge && document.getElementById("msTile-"+ (i-11)).bomb) adjacentBombs++; //top-left
-            if (i > 9 && document.getElementById("msTile-"+ (i-10)).bomb) adjacentBombs++; //top
-            if (i > 9 && !rightEdge && document.getElementById("msTile-"+ (i-9)).bomb) adjacentBombs++; //top-right
-            if (!leftEdge && document.getElementById("msTile-"+ (i-1)).bomb) adjacentBombs++; //left
-            if (!rightEdge && document.getElementById("msTile-"+ (i+1)).bomb) adjacentBombs++; //right
-            if (i < boardSize - 10 && !leftEdge && document.getElementById("msTile-"+ (i+9)).bomb) adjacentBombs++; //bottom-left
-            if (i < boardSize - 10 && document.getElementById("msTile-"+ (i+10)).bomb) adjacentBombs++; //bottom
-            if (i < boardSize - 10 && !rightEdge && document.getElementById("msTile-"+ (i+11)).bomb) adjacentBombs++; //bottom-right
-            tile.value = adjacentBombs; //Set the tile's value to the number of adjacent bombs
+        } else if (condition == END_WIN) { //Win Condition
+            UI.setGameStatus("CONGRATULATIONS! YOU WIN!"); // Notify the user they won
+        } else {
+            UI.errorPage(ERROR_UNKNOWN_END); //Unknown Condition, throw error
         }
     }
-}
+                
 
-//Game Logic Function
-//End Game Function
-function endGame(condition) {
-    if (condition == '1') { //Lose Condition
-        gameStatus.innerHTML = "GAME OVER";
-        for (let i = 0; i < bombTiles.length; i++) { //Reveal all bombs when the game ends
-            if (!bombTiles[i].flagged) { //If the bomb tile is not flagged
-                bombTiles[i].classList.add('bomb'); // Reveal the bomb
+    /**
+     * Zhang: redefine this function to assign value to the tile at the same time
+     */
+    loadBomb(clicked_tile) { //Generate bombs on the board
+        let bombCounter = UI.bombAmountInput.value; //Get the number of bombs to place
+        while (bombCounter > 0) { //While there are still bombs to place
+            let randomValue = randomNumber(this.boardSize); //Get a random number
+            let tile = document.getElementById("msTile-"+ randomValue); //Get the tile element
+            if (tile.id !== clicked_tile.id && !this.adjacentFCTiles.includes(randomValue) && tile.bomb !== true){ //Ensure the first clicked tile is not a bomb or a number tile
+                tile.bomb = true; //Set the tile as a bomb
+                this.bombTiles.push(tile); //Add to bomb tiles
+                bombCounter--; //Decrease the bomb counter
+            }
+        } 
+    }
+
+    /**
+     * Generates the column headers for the game board
+     */
+    _generateColumnHeaders() {
+        const headerRow = document.createElement('div'); // Create a div to store column headers
+        headerRow.setAttribute('style', 'display:flex ; align-items:center; justify-content:center;'); //Style the header row
+        UI.board.appendChild(headerRow); // Append the div to the board slot
+
+        const corner = document.createElement('div'); // Top-left corner creation
+        corner.style.width = '50px';
+        headerRow.append(corner);
+
+        for(let i = 0; i < 10; i++){ //column headers
+            const colLabel = document.createElement('div'); // Create a div to store column labels
+            var letter = ALPHABET.substring(i,i+1); //Get the letter for the column
+            colLabel.innerText = letter; //Set the text of the column label
+            colLabel.setAttribute('style','align-items:center ;width:50px; height:50px; display:flex ;justify-content:center;'); //Style it
+            headerRow.append(colLabel); //Append it to the header row
+        }
+    }
+
+    /**
+     * Generates the rows and tiles for the game board
+     */
+    _generateRows() {
+        let idNum = 0; //ID number for each button
+        for (let i = 0; i < 10; i++) { //rows
+            const msRow = document.createElement('div'); // Create a div to store buttons
+            msRow.setAttribute('style', 'display:flex ; align-items:center; justify-content:center;') //Style the row
+            UI.board.appendChild(msRow); // Append the div to the board slot
+
+            const rowLabel = document.createElement('div'); // Create a div to store row labels
+            rowLabel.setAttribute('style','align-items:center ;width:50px; height:50px; display:flex ;justify-content:center') //Style it
+            var txt = (i+1).toString(); //Get the number for the row
+            rowLabel.innerText = txt; //Set the text of the row label
+            msRow.appendChild(rowLabel) //Append it to the row
+
+            for (let j = 0; j < 10; j++) {
+                const msButton = document.createElement('button'); // Create buttons k times
+                msButton.id = "msTile-"+idNum;// assign unique ID for tracking
+                // msButton.value = 0; // Set initial value, 0 is a bomb/empty tile, and then 1-3 for amount of bombs around it
+                msButton.bomb = false;
+                msButton.revealed = false;
+                msButton.flagged = false;
+                msButton.image = null;
+                msRow.appendChild(msButton); // Append buttons to the row
+                idNum++;
             }
         }
-    } else if (condition == '2') { //Win Condition
-        gameStatus.innerHTML = "CONGRATULATIONS! YOU WIN!"; //Notify the user they won
-    } else {
-        errorPage(2); //Unknown Condition, throw error
+        this.boardSize = idNum; // Number is used for randomizer, fix code
+        //I call this one div hellscape
+        // awesome comment - RM
+    }
+
+    /**
+     * Generates the game board with tiles and labels
+     */
+    generate() {
+        this._generateColumnHeaders(); // Generate column headers
+        this._generateRows(); // Generate rows and tiles
     }
 }
 
-//Check if Tile is Bomb Function
-function isBomb(tile) {
-    return tile.bomb == true; //Check if tile is a bomb, if not return false
-} 
-            
-//Load Bomb Function
-//Zhang: redefine this function to assign value to the tile at the same time
-function loadBomb(clicked_tile) { //Generate bombs on the board
-    let bombCounter = bombAmount.value; //Get the number of bombs to place
-    while (bombCounter > 0) { //While there are still bombs to place
-        let randomValue = randomNumber(); //Get a random number
-        let tile = document.getElementById("msTile-"+ randomValue); //Get the tile element
-        if (tile.id !== clicked_tile.id && !adjacentFCTiles.includes(randomValue) && tile.bomb !== true){ //Ensure the first clicked tile is not a bomb or a number tile
-            tile.bomb = true; //Set the tile as a bomb
-            bombTiles.push(tile); //Add to bomb tiles
-            bombCounter--; //Decrease the bomb counter
+class App {
+    game = new Game(); // The game instance
+
+    /**
+     * Loads the horse image.
+     * @param {*} url - The URL of the horse image.
+     */
+    loadHorse(url) { 
+        var horse = new Image();
+        horse.src = url;
+        if (horse.width == 0) {
+            UI.errorPage(ERROR_HORSE)
+        } else this.returnBack();
+    }
+
+    /**
+     * Selects the bomb amount and starts the game
+     * @returns {void}
+     */
+    select() {
+        let bombValue = UI.bombAmountInput.value; // Get the value of the bomb amount input
+        if (bombValue < MIN_BOMBS || bombValue > MAX_BOMBS) { // Check if the bomb amount is out of range
+            alert(`Please select a bomb value between ${MIN_BOMBS} and ${MAX_BOMBS}.`); // Alert the user
+            UI.disablePlayButton();
+            UI.setGameStatus(`Please select a bomb value between ${MIN_BOMBS} and ${MAX_BOMBS}.`); // Update the notification
+            return; // Exit the function if the bomb amount is invalid
         }
-    } 
-}
-        
-//Random Number Generator
-function randomNumber() {
-    let randomNum = Math.floor(Math.random() * boardSize); //Generate a random number between 0 and boardSize-1
-    return randomNum; //Return the random number
-}
 
-//Generate Board Function
-function generateBoard() {
-    let idNum = 0; //ID number
-
-    var abc = "abcdefghijklmnopqrstuvwxyz".toUpperCase(); //For columns
-    const headerRow = document.createElement('div'); // Create a div to store column headers
-    headerRow.setAttribute('style', 'display:flex ; align-items:center; justify-content:center;'); //Style the header row
-    board.appendChild(headerRow); // Append the div to the board slot
-
-    const corner = document.createElement('div'); // Top-left corner creation
-    corner.style.width = '50px';
-    headerRow.append(corner);
-
-    for(let i = 0; i < 10; i++){ //column headers
-        const colLabel = document.createElement('div'); // Create a div to store column labels
-        var letter = abc.substring(i,i+1); //Get the letter for the column
-        colLabel.innerText = letter; //Set the text of the column label
-        colLabel.setAttribute('style','align-items:center ;width:50px; height:50px; display:flex ;justify-content:center;'); //Style it
-        headerRow.append(colLabel); //Append it to the header row
+        // Zhang: Add a check to ensure bomb amount is within requirement
+        UI.enablePlayButton(); // Enable Play Button
+        UI.bombAmountInput.style.display = 'none'; // Hide the bomb input
+        UI.buttonSelect.style.display = 'none'; // Hide the select button
+        this.game.startGame(); // Start the game
     }
 
-    for (let i = 0; i < 10; i++) { //rows
-        const msRow = document.createElement('div'); // Create a div to store buttons
-        msRow.setAttribute('style', 'display:flex ; align-items:center; justify-content:center;') //Style the row
-        board.appendChild(msRow); // Append the div to the board slot
-
-        const rowLabel = document.createElement('div'); // Create a div to store row labels
-        rowLabel.setAttribute('style','align-items:center ;width:50px; height:50px; display:flex ;justify-content:center') //Style it
-        var txt = (i+1).toString(); //Get the number for the row
-        rowLabel.innerText = txt; //Set the text of the row label
-        msRow.appendChild(rowLabel) //Append it to the row
-
-        for (let j = 0; j < 10; j++) {
-            const msButton = document.createElement('button'); // Create buttons k times
-            msButton.id = "msTile-"+idNum;// assign unique ID for tracking
-            // msButton.value = 0; // Set initial value, 0 is a bomb/empty tile, and then 1-3 for amount of bombs around it
-            msButton.bomb = false;
-            msButton.revealed = false;
-            msButton.flagged = false;
-            msButton.image = null;
-            msRow.appendChild(msButton); // Append buttons to the row
-            idNum++;
-        }
-        
+    /**
+     * Loads the options menu
+     */
+    loadOption() {
+        UI.setGameStatus(''); // Clear the labelGameStatus
+        this.game.state = STATE_OPTIONS; // Set the state to Options
+        // Hide all unimportant menus, show only options
+        UI.PAGE_MAIN_MENU.style.display = 'none'; 
+        UI.PAGE_GAME_MENU.style.display = 'none';
+        UI.PAGE_OPTION_MENU.style.display = 'block';
+        UI.PAGE_CREDIT_MENU.style.display = 'none';
+        UI.PAGE_PREGAME_MENU.style.display = 'none';
     }
-    boardSize = idNum; //Number is used for randomizer, fix code
-    //I call this one div hellscape
-}
 
-//Change Style Function
-function changeTheme() { //
-    let theme = document.body; //Get the body element
-    currentTheme++; //Increment the theme
-    if (currentTheme == 3) currentTheme = 0; //Reset if out of bounds
+    /**
+     * Loads the credits menu
+     */
+    loadCredit() {
+        UI.setGameStatus(''); //Clear the labelGameStatus
+        this.game.state = STATE_CREDITS; //Set the state to Credits
+        //Hide all unimportant menus, show only credits
+        UI.PAGE_MAIN_MENU.style.display = 'none';
+        UI.PAGE_GAME_MENU.style.display = 'none';
+        UI.PAGE_OPTION_MENU.style.display = 'none';
+        UI.PAGE_CREDIT_MENU.style.display = 'block';
+        UI.PAGE_PREGAME_MENU.style.display = 'none';
+    }
 
-    //Theme Toggle
-    if (currentTheme == 0) {
-        theme.classList.toggle("dark-mode");
-        theme.classList.toggle("classic-mode");
-        themeButton.innerHTML = "Default Theme";
-    } else if (currentTheme == 1) {
-        theme.classList.toggle("dark-mode");
-        themeButton.innerHTML = "Dark Theme";
-    } else if (currentTheme == 2) {
-        theme.classList.toggle("classic-mode");
-        themeButton.innerHTML = "Classic Theme";
+    /**
+     * Returns to the main menu
+     */
+    returnBack() {
+        UI.setGameStatus(''); //Clear the labelGameStatus
+        this.game.state = STATE_MAIN_MENU; //Set the state to Main Menu
+        //Hide all unimportant menus, go back to main menu
+        UI.PAGE_MAIN_MENU.style.display = 'block';
+        UI.PAGE_GAME_MENU.style.display = 'none';
+        UI.PAGE_OPTION_MENU.style.display = 'none';
+        UI.PAGE_CREDIT_MENU.style.display = 'none';
+        UI.PAGE_PREGAME_MENU.style.display = 'none';
+    }
+
+    /**
+     * Resets the page to its initial state.
+     * Just a wrapper for reloading the page.
+     */
+    resetPage() {
+        window.location.reload() //Reload the page
+    }
+
+    /**
+     * Loads the game page and shows the pregame menu
+     */
+    loadGame() {
+        //Load the game page and show only the pregame menu
+        UI.PAGE_MAIN_MENU.style.display = 'none';
+        UI.PAGE_OPTION_MENU.style.display = 'none';
+        UI.PAGE_CREDIT_MENU.style.display = 'none';
+        UI.PAGE_PREGAME_MENU.style.display = 'block';
+        UI.setGameStatus(""); //Clear the notification
     }
 }
 
-//Error Function
-function errorPage(type) {
-    //Remove All UI
-    document.getElementById("titleMessage").innerHTML = "Error Detected";
-    bombAmount.remove();
-    selectButton.remove();
-    playButton.remove();
-    //Error Type if-else Block
-    if (type == 1) {
-        gameStatus.innerHTML = "Error 01: No Horse Power - Use the 'Reset' Button to reload the page after checking if the '../assets/images' folder is present in the file."
-    } if (type == 2) {
-        gameStatus.innerHTML = "Error 02: Unknown Game End Condition - Use the 'Reset' Button to reload the page."
-    }
-}
+///======= Instantiate App
+const APP = new App(); // "Singleton" instance of App
 
-//Image Check Function
-//Can we please delete this     //no
-function loadHorse(url) { 
-    var horse = new Image();
-    horse.src = url;
-    if (horse.width == 0) {
-        errorPage(1)
-    } else returnBack();
+///======= Utils
+/**
+ * Generates a random number between 0 and boardSize-1.
+ * @returns A random number between 0 and boardSize-1
+ * @param {*} max The upper limit for the random number generation (exclusive)
+ */
+function randomNumber(max) {
+    let randomNum = Math.floor(Math.random() * max); // Generate a random number between 0 and max-1
+    return randomNum; // Return the random number
 }
