@@ -55,20 +55,20 @@ class Game {
      */
     _adjacentTiles(tile) { //Get all adjacent tiles to the first clicked tile
         const tileId = parseInt(tile.id.split('-')[1]); //Get the number ID of the tile
-        const leftEdge = (tileId % 10 === 0); //Check if it's on the left edge
-        const rightEdge = (tileId % 10 === 9); //Check if it's on the right edge
+        const leftEdge = (tileId % ROW_COUNT === 0); //Check if it's on the left edge
+        const rightEdge = (tileId % ROW_COUNT === (ROW_COUNT-1)); //Check if it's on the right edge
         const neighbors = []; //hold adjacent tile
-        if (tileId >= 10) { //If not on the top row
-            if (!leftEdge) neighbors.push(tileId - 11); //northwest
-            neighbors.push(tileId - 10); //north
-            if (!rightEdge) neighbors.push(tileId - 9); //northeasst
+        if (tileId >= ROW_COUNT) { //If not on the top row
+            if (!leftEdge) neighbors.push(tileId - (ROW_COUNT+1)); //northwest
+            neighbors.push(tileId - ROW_COUNT); //north
+            if (!rightEdge) neighbors.push(tileId - (ROW_COUNT-1)); //northeasst
         }
         if (!leftEdge) neighbors.push(tileId - 1); //west
         if (!rightEdge) neighbors.push(tileId + 1); //east
-        if (tileId < this.boardSize - 10) { //If not on the bottom row
-            if (!leftEdge) neighbors.push(tileId + 9); //southwest
-            neighbors.push(tileId + 10); //south
-            if (!rightEdge) neighbors.push(tileId + 11); //southeast
+        if (tileId < this.boardSize - ROW_COUNT) { //If not on the bottom row
+            if (!leftEdge) neighbors.push(tileId + (ROW_COUNT-1)); //southwest
+            neighbors.push(tileId + ROW_COUNT); //south
+            if (!rightEdge) neighbors.push(tileId + (ROW_COUNT+1)); //southeast
         }
         return neighbors; //return the list of adjacent tiles
     }
@@ -188,16 +188,16 @@ class Game {
             let tile = document.getElementById("msTile-"+ i); //Get the tile element
             if (!tile.bomb){ //If the tile is not a bomb
                 let adjacentBombs = 0; //Counter for adjacent bombs
-                const leftEdge = (i % 10 === 0); //Check if it's on the left edge
-                const rightEdge = (i % 10 === 9); //Check if it's on the right edge
-                if (i > 9 && !leftEdge && document.getElementById("msTile-"+ (i-11)).bomb) adjacentBombs++; //top-left
-                if (i > 9 && document.getElementById("msTile-"+ (i-10)).bomb) adjacentBombs++; //top
-                if (i > 9 && !rightEdge && document.getElementById("msTile-"+ (i-9)).bomb) adjacentBombs++; //top-right
+                const leftEdge = (i % ROW_COUNT === 0); //Check if it's on the left edge
+                const rightEdge = (i % ROW_COUNT === (ROW_COUNT-1)); //Check if it's on the right edge
+                if (i > (ROW_COUNT-1) && !leftEdge && document.getElementById("msTile-"+ (i-(ROW_COUNT+1))).bomb) adjacentBombs++; //top-left
+                if (i > (ROW_COUNT-1) && document.getElementById("msTile-"+ (i-ROW_COUNT)).bomb) adjacentBombs++; //top
+                if (i > (ROW_COUNT-1) && !rightEdge && document.getElementById("msTile-"+ (i-(ROW_COUNT-1))).bomb) adjacentBombs++; //top-right
                 if (!leftEdge && document.getElementById("msTile-"+ (i-1)).bomb) adjacentBombs++; //left
                 if (!rightEdge && document.getElementById("msTile-"+ (i+1)).bomb) adjacentBombs++; //right
-                if (i < this.boardSize - 10 && !leftEdge && document.getElementById("msTile-"+ (i+9)).bomb) adjacentBombs++; //bottom-left
-                if (i < this.boardSize - 10 && document.getElementById("msTile-"+ (i+10)).bomb) adjacentBombs++; //bottom
-                if (i < this.boardSize - 10 && !rightEdge && document.getElementById("msTile-"+ (i+11)).bomb) adjacentBombs++; //bottom-right
+                if (i < (this.boardSize-ROW_COUNT) && !leftEdge && document.getElementById("msTile-"+ (i+(ROW_COUNT-1))).bomb) adjacentBombs++; //bottom-left
+                if (i < (this.boardSize-ROW_COUNT) && document.getElementById("msTile-"+ (i+ROW_COUNT)).bomb) adjacentBombs++; //bottom
+                if (i < (this.boardSize-ROW_COUNT) && !rightEdge && document.getElementById("msTile-"+ (i+(ROW_COUNT+1))).bomb) adjacentBombs++; //bottom-right
                 tile.value = adjacentBombs; //Set the tile's value to the number of adjacent bombs
             }
         }
@@ -252,7 +252,7 @@ class Game {
         corner.style.width = '50px';
         headerRow.append(corner);
 
-        for(let i = 0; i < 10; i++){ //column headers
+        for(let i = 0; i < COL_COUNT; i++){ //column headers
             const colLabel = document.createElement('div'); // Create a div to store column labels
             var letter = ALPHABET.substring(i,i+1); //Get the letter for the column
             colLabel.innerText = letter; //Set the text of the column label
@@ -266,7 +266,7 @@ class Game {
      */
     _generateRows() {
         let idNum = 0; //ID number for each button
-        for (let i = 0; i < 10; i++) { //rows
+        for (let i = 0; i < ROW_COUNT; i++) { //rows
             const msRow = document.createElement('div'); // Create a div to store buttons
             msRow.setAttribute('style', 'display:flex ; align-items:center; justify-content:center;') //Style the row
             UI.board.appendChild(msRow); // Append the div to the board slot
@@ -277,7 +277,7 @@ class Game {
             rowLabel.innerText = txt; //Set the text of the row label
             msRow.appendChild(rowLabel) //Append it to the row
 
-            for (let j = 0; j < 10; j++) {
+            for (let j = 0; j < ROW_COUNT; j++) {
                 const msButton = document.createElement('button'); // Create buttons k times
                 msButton.id = "msTile-"+idNum;// assign unique ID for tracking
                 // msButton.value = 0; // Set initial value, 0 is a bomb/empty tile, and then 1-3 for amount of bombs around it

@@ -10,6 +10,8 @@
 
 const MIN_BOMBS = 10; // Minimum number of bombs allowed
 const MAX_BOMBS = 20; // Maximum number of bombs allowed
+const ROW_COUNT = 10; // Number of rows in the game grid
+const COL_COUNT = ROW_COUNT; // Number of columns in the game grid (for now, a square grid)
 const ALPHABET = "abcdefghijklmnopqrstuvwxyz".toUpperCase(); // The alphabet in uppercase
 const HORSE_IMAGE_PATH = '../assets/images/horse.webp'; // Path to the horse image
 
