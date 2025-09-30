@@ -59,10 +59,16 @@ There are many ways to host to play, including:
 - **CSS**: Styling and themes
 - **JavaScript**: Game logic
 
-## Special implementation: Themes
+## Special Feature
+
+### Group 21: Themes
 
 The game includes three themes:
 
 - **Default Theme**: Standard appearance
 - **Dark Theme**: Dark mode to match your system
 - **Classic Theme**: Traditional minesweeper styling
+
+### Group 20: TBD
+
+The special feature from Group 20 is TBD.

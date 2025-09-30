@@ -4,8 +4,9 @@
 
 ### Functionality
 
-- [ ] Ensure that all inherited features from Project 1 are functional
+- [x] Ensure that all inherited features from Project 1 are functional
 - [ ] AI Solver
+  - [x] Base class setup
   - [ ] Easy mode
   - [ ] Medium mode
   - [ ] Hard mode
@@ -22,7 +23,7 @@
 
 ### Person-Hours Estimate
 
-- [ ] Detail methodology for estimating hours
+- [x] Detail methodology for estimating hours
 
 ### In-Person Hours
 
@@ -31,20 +32,20 @@
 
 ### System Architecture Overview
 
-- [ ] High level description of each component
+- [x] High level description of each component
 - [ ] High level diagrams of each component/data structure
 - [ ] High level diagram of data flow
 
 ## Code Documentation and Comments
 
-- [ ] Prologue comments for every source code file
-  - [ ] Function, class, module name
-  - [ ] Brief description
-  - [ ] Inputs and outputs
-  - [ ] External sources with attribution
-  - [ ] Author(s) full name(s) and creation date
-- [ ] Proper in-code comments for every source code file
-  - [ ] Comment major code blocks
-  - [ ] Indicate originality
-  - [ ] Ensure clarity for GTA and future teams
-- [ ] Proper source attribution for every source code file
+- [x] Prologue comments for every source code file
+  - [x] Function, class, module name
+  - [x] Brief description
+  - [x] Inputs and outputs
+  - [x] External sources with attribution
+  - [x] Author(s) full name(s) and creation date
+- [x] Proper in-code comments for every source code file
+  - [x] Comment major code blocks
+  - [x] Indicate originality
+  - [x] Ensure clarity for GTA and future teams
+- [x] Proper source attribution for every source code file

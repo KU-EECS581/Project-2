@@ -6,7 +6,7 @@
  * Inputs: User control events from app.js (button clicks, game interactions)
  * Outputs: Visual display of the game, text prompts to the user
  * Dependencies: constants.js utils.js ui.js
- * Date Revised: 09 September 2025
+ * Date Revised: 29 September 2025
  */
 
 /**

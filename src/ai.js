@@ -3,7 +3,7 @@
  * Description: Contains all the JavaScript code for the AI player in the game of minesweeper.
  * Original Author(s): Riley Meyerkorth
  * Dependencies: constants.js utils.js game.js ui.js
- * Date Revised: 10 September 2025
+ * Date Revised: 30 September 2025
  */
 
 class AI {

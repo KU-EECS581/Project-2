@@ -5,7 +5,7 @@
  * Inputs: N/A
  * Outputs: N/A
  * Dependencies: N/A
- * Date Created: 09 September 2025
+ * Date Created: 29 September 2025
  */
 
 const MIN_BOMBS = 10; // Minimum number of bombs allowed
@@ -52,5 +52,3 @@ const TURN_AI = 1; // AI's Turn
 // Error "Enum"
 const ERROR_HORSE = 1; // Horse Error
 const ERROR_UNKNOWN_END = 2; // Unknown End Condition Error
-
-// No export needed - these are now global variables
