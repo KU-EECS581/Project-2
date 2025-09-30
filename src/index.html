@@ -1,9 +1,11 @@
 <!--
-File: minesweeperProject.html
-File: game.js
-EECS 581 - Group 21
-Project 1 - Minesweeper
-Authors: Evan Zhuo, Ian Foerwiser, Jack Morice, Zhang Chen, Alex Carillo
+Name: index.html
+Original Authors: Evan Zhuo, Ian Foerwiser, Jack Morice, Zhang Chen, Alex Carillo
+Revised Author(s): Riley Meyerkorth
+Inputs: User control events from app.js (button clicks, game interactions)
+Outputs: Visual display of the game, text prompts to the user
+Date Revised: 09 September 2025
+
 This file contains the HTML code for the minesweeper project.
 This serves as the homepage for the game, linking the CSS and JS file, as well as giving options to the user
 The only inputs are from the user clicking buttons to navigate the page and play the game, or choosing a bomb amount
@@ -15,7 +17,7 @@ The outputs are the visual display of the game, as well as text prompts to the u
     <!-- Link to our CSS file -->
     <link rel="stylesheet" type="text/css" href="styles.css">
     <!-- HTML Section -->
-    <div style="text-align: center;">
+    <div id="rootDiv">
     <head>
         <title>Minesweeper Project</title>
     </head>
@@ -36,7 +38,7 @@ The outputs are the visual display of the game, as well as text prompts to the u
         <!-- Options Page -->
         <div id="pageOptions">
             <p id="labelOptions"> Options </p>
-            <li> <button id="buttonTheme" onclick="UI.changeTheme()"> Default Theme </button> </li>
+            <li> <button id="buttonTheme" onclick="APP.changeTheme()"> Default Theme </button> </li>
             <li> <button id="buttonBack" onclick="APP.returnBack()"> Back </button> </li>
         </div>
 
@@ -57,8 +59,8 @@ The outputs are the visual display of the game, as well as text prompts to the u
 
         <!-- Game Page -->
         <div id="pageGame">
-            <div id="mineFlagStatus" style="display: flex; gap: 20px; justify-content: center; align-items: center;"></div>
-                <span id="labelMineAmount"><img src="../assets/images/bomb.png" style="height:24px;"> <span id="labelMineNum"></span></span>
+            <div id="mineFlagStatus"></div>
+                <span id="labelMineAmount"><img src="../assets/images/bomb.png"> <span id="labelMineNum"></span></span>
             <div id="divBoard"></div>
             <button id="buttonReset" onclick="APP.resetPage()"> Reset </button>
         </div>
@@ -67,7 +69,11 @@ The outputs are the visual display of the game, as well as text prompts to the u
         <p id="labelVersion"> Minescuffers Beta 1.2.2 </p>
 
         <!-- JavaScript Section -->
+        <script src="constants.js"></script>
+        <script src="utils.js"></script>
+        <script src="ui.js"></script>
         <script src="game.js"></script>
+        <script src="app.js"></script>
     </body>
     </div>
 </html>
