@@ -27,10 +27,10 @@ The outputs are the visual display of the game, as well as text prompts to the u
 
             <!-- Main Page -->
             <div id="pageMain">
-                <li> <button id="buttonPlay" onclick="APP.loadGame()"> Play Game </button> </li>
-                <li> <button id="buttonOption" onclick="APP.loadOption()"> Options </button> </li>
-                <li> <button id="buttonCredit" onclick="APP.loadCredit()"> Credits </button> </li>
-                <li> <button id="buttonReset" onclick="APP.resetPage()"> Reset </button> </li>
+                <li> <button id="buttonPlay" onclick="APP.navigate(PAGE_GAME)"> Play Game </button> </li>
+                <li> <button id="buttonOption" onclick="APP.navigate(PAGE_OPTION)"> Options </button> </li>
+                <li> <button id="buttonCredit" onclick="APP.navigate(PAGE_CREDIT)"> Credits </button> </li>
+                <li> <button id="buttonReset" onclick="APP.reset()"> Reset </button> </li>
 
                 <img src="../assets/images/horse.webp" width="0%" height="auto"> <!-- Error Check: ../assets/images Folder Detector -->
             </div>
@@ -38,8 +38,8 @@ The outputs are the visual display of the game, as well as text prompts to the u
             <!-- Options Page -->
             <div id="pageOptions">
                 <p id="labelOptions"> Options </p>
-                <li> <button id="buttonTheme" onclick="APP.changeTheme()"> Default Theme </button> </li>
-                <li> <button id="buttonBack" onclick="APP.returnBack()"> Back </button> </li>
+                <li> <button id="buttonTheme" onclick="UI.changeTheme();"> Default Theme </button> </li>
+                <li> <button id="buttonBack" onclick="APP.navigate(PAGE_MAIN)"> Back </button> </li>
             </div>
 
             <!-- Credits Page -->
@@ -47,7 +47,7 @@ The outputs are the visual display of the game, as well as text prompts to the u
                 <img src="../assets/images/catDespair.jfif" width="25%" height="auto">
                 <h2>Credits</h2>
                 <p>Game Made by: Alex Carillo, Zhang Chen, Ian Foerwiser, Jack Morice, Evan Zhuo </p>
-                <button id="buttonBack" onclick="APP.returnBack()"> Back </button>
+                <button id="buttonBack" onclick="APP.navigate(PAGE_MAIN)"> Back </button>
             </div>
 
             <!-- Pre-Game Page -->
@@ -58,11 +58,11 @@ The outputs are the visual display of the game, as well as text prompts to the u
                 </li>
                 <li>
                     <label for="checkboxEnableAI">Enable AI Bot:</label>
-                    <input id="checkboxEnableAI" name="checkboxEnableAI" type="checkbox" value="false" onchange="APP.toggleBot()"> </input>
+                    <input id="checkboxEnableAI" name="checkboxEnableAI" type="checkbox" value="false" onchange="APP.ai.toggle()"> </input>
                 </li>
                 <li> 
                     <label for="dropdownDifficultyAI">AI Difficulty:</label>
-                    <select id="dropdownDifficultyAI" name="dropdownDifficultyAI" onchange="APP.updateDifficulty()" disabled>
+                    <select id="dropdownDifficultyAI" name="dropdownDifficultyAI" onchange="APP.ai.updateDifficulty()" disabled>
                         <option value="0">Easy</option>
                         <option value="1">Medium</option>
                         <option value="2">Hard</option>
@@ -77,17 +77,19 @@ The outputs are the visual display of the game, as well as text prompts to the u
                 <div id="mineFlagStatus"></div>
                 <span id="labelMineAmount"><img src="../assets/images/bomb.png"> <span id="labelMineNum"></span></span>
                 <div id="divBoard"></div>
-                <button id="buttonReset" onclick="APP.resetPage()"> Reset </button>
+                <button id="buttonReset" onclick="APP.reset()"> Reset </button>
             </div>
 
             <!-- Version Information -->
             <p id="labelVersion"> Minescuffers Beta 1.3.0 </p>
 
             <!-- JavaScript Section -->
+            <!-- NOTE: THIS ORDER IS IMPORTANT -->
             <script src="constants.js"></script>
             <script src="utils.js"></script>
             <script src="ui.js"></script>
             <script src="game.js"></script>
+            <script src="ai.js"></script>
             <script src="app.js"></script>
         </body>
     </div>

@@ -16,11 +16,11 @@
 class UIManager {
     // Menu Elements
     // Each menu corresponds to its div in the index.html file
-    PAGE_MAIN_MENU = document.getElementById("pageMain");
-    PAGE_GAME_MENU = document.getElementById("pageGame");
-    PAGE_OPTION_MENU = document.getElementById("pageOptions");
-    PAGE_CREDIT_MENU = document.getElementById("pageCredits");
-    PAGE_PREGAME_MENU = document.getElementById("pagePreGame");
+    pageMain = document.getElementById("pageMain");
+    pageGame = document.getElementById("pageGame");
+    pageOptions = document.getElementById("pageOptions");
+    pageCredits = document.getElementById("pageCredits");
+    pagePreGame = document.getElementById("pagePreGame");
 
     // Buttons
     // Each button corresponds to its element in the index.html file

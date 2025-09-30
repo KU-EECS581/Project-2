@@ -13,6 +13,7 @@
  */
 class App {
     game = new Game(); // The game instance
+    ai = new AI(this.game, DIFFICULTY_NONE); // The AI bot instance
 
     /**
      * Initializes the application.
@@ -27,14 +28,7 @@ class App {
         }
         
         // Start at the main menu
-        this.returnBack();
-    }
-
-    /**
-     * Basically a wrapper for UI.changeTheme() so that the index can call it.
-     */
-    changeTheme() {
-        UI.changeTheme();
+        this.navigate(PAGE_MAIN);
     }
 
     /**
@@ -58,31 +52,24 @@ class App {
     }
 
     /**
-     * Toggles the AI bot on or off.
+     * Navigates to the specified page.
+     * @param {number} page The page to navigate to (from the PAGE "enum")
      */
-    toggleBot() {
-        this.game.isAiEnabled = UI.handleEnabledAICheckboxChanged();
-    }
-
-    /**
-     * Updates the AI difficulty based on UI selections.
-     */
-    updateDifficulty() {
-        if (!UI.checkboxEnableAI.checked) {
-            this.game.difficulty = DIFFICULTY_NONE;
-            return;
-        }
-
-        // Switch case to set the difficulty based on dropdown value
-        switch (UI.dropdownDifficultyAI.value) {
-            case DIFFICULTY_EASY:
-                this.game.difficulty = DIFFICULTY_EASY;
+    navigate(page) {
+        switch(page) {
+            case PAGE_OPTION:
+                this._loadOption();
                 break;
-            case DIFFICULTY_MEDIUM:
-                this.game.difficulty = DIFFICULTY_MEDIUM;
+            case PAGE_CREDIT:
+                this._loadCredit();
                 break;
-            case DIFFICULTY_HARD:
-                this.game.difficulty = DIFFICULTY_HARD;
+            case PAGE_GAME:
+            case PAGE_PREGAME:
+                this._loadGame();
+                break;
+            case PAGE_MAIN:
+            default:
+                this._loadMain();
                 break;
         }
     }
@@ -90,64 +77,69 @@ class App {
     /**
      * Loads the options menu
      */
-    loadOption() {
-        UI.setGameStatus(''); // Clear the labelGameStatus
+    _loadOption() {
         this.game.state = STATE_OPTIONS; // Set the state to Options
+
         // Hide all unimportant menus, show only options
-        UI.PAGE_MAIN_MENU.style.display = 'none'; 
-        UI.PAGE_GAME_MENU.style.display = 'none';
-        UI.PAGE_OPTION_MENU.style.display = 'block';
-        UI.PAGE_CREDIT_MENU.style.display = 'none';
-        UI.PAGE_PREGAME_MENU.style.display = 'none';
+        UI.pageMain.style.display = 'none'; 
+        UI.pageGame.style.display = 'none';
+        UI.pageOptions.style.display = 'block';
+        UI.pageCredits.style.display = 'none';
+        UI.pagePreGame.style.display = 'none';
+        UI.setGameStatus(''); // Clear the labelGameStatus
     }
 
     /**
      * Loads the credits menu
      */
-    loadCredit() {
-        UI.setGameStatus(''); //Clear the labelGameStatus
+    _loadCredit() {
         this.game.state = STATE_CREDITS; //Set the state to Credits
+
         //Hide all unimportant menus, show only credits
-        UI.PAGE_MAIN_MENU.style.display = 'none';
-        UI.PAGE_GAME_MENU.style.display = 'none';
-        UI.PAGE_OPTION_MENU.style.display = 'none';
-        UI.PAGE_CREDIT_MENU.style.display = 'block';
-        UI.PAGE_PREGAME_MENU.style.display = 'none';
-    }
-
-    /**
-     * Returns to the main menu
-     */
-    returnBack() {
+        UI.pageMain.style.display = 'none';
+        UI.pageGame.style.display = 'none';
+        UI.pageOptions.style.display = 'none';
+        UI.pageCredits.style.display = 'block';
+        UI.pagePreGame.style.display = 'none';
         UI.setGameStatus(''); //Clear the labelGameStatus
-        this.game.state = STATE_MAIN_MENU; //Set the state to Main Menu
-        //Hide all unimportant menus, go back to main menu
-        UI.PAGE_MAIN_MENU.style.display = 'block';
-        UI.PAGE_GAME_MENU.style.display = 'none';
-        UI.PAGE_OPTION_MENU.style.display = 'none';
-        UI.PAGE_CREDIT_MENU.style.display = 'none';
-        UI.PAGE_PREGAME_MENU.style.display = 'none';
-    }
-
-    /**
-     * Resets the page to its initial state.
-     * Just a wrapper for reloading the page.
-     */
-    resetPage() {
-        window.location.reload() //Reload the page
     }
 
     /**
      * Loads the game page and shows the pregame menu
      */
-    loadGame() {
+    _loadGame() {
         //Load the game page and show only the pregame menu
-        UI.PAGE_MAIN_MENU.style.display = 'none';
-        UI.PAGE_OPTION_MENU.style.display = 'none';
-        UI.PAGE_CREDIT_MENU.style.display = 'none';
-        UI.PAGE_PREGAME_MENU.style.display = 'block';
+        UI.pageMain.style.display = 'none';
+        UI.pageOptions.style.display = 'none';
+        UI.pageCredits.style.display = 'none';
+        UI.pagePreGame.style.display = 'block';
         UI.setGameStatus(""); //Clear the notification
     }
+
+    /**
+     * Returns to the main menu
+     */
+    _loadMain() {
+        this.game.state = STATE_MAIN_MENU; //Set the state to Main Menu
+
+        //Hide all unimportant menus, go back to main menu
+        UI.pageMain.style.display = 'block';
+        UI.pageGame.style.display = 'none';
+        UI.pageOptions.style.display = 'none';
+        UI.pageCredits.style.display = 'none';
+        UI.pagePreGame.style.display = 'none';
+
+        UI.setGameStatus(''); //Clear the labelGameStatus
+    }
+
+    /**
+     * Resets the app to its initial state.
+     * Just a wrapper for reloading the page.
+     */
+    reset() {
+        window.location.reload() //Reload the page
+    }
+    
 }
 
 const APP = new App(); // "Singleton" instance of App

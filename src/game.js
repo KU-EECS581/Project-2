@@ -24,8 +24,52 @@ class Game {
     actualFlaggedBombCount = 0; // Number of correctly flagged bombs
     state = STATE_MAIN_MENU; // 0: Main Menu | 1: Active Game | 2: Options | 3: Credits
     isLeftClicked = false; // First Left Click Gate
-    isAiEnabled = false; // AI Enabled Setting
-    difficulty = DIFFICULTY_NONE; // AI Difficulty Setting
+
+    /**
+     * Initializes game variables for a new game
+     */
+    _init() {
+        this.state = STATE_ACTIVE_GAME; //Set the game as Active
+        this.userFlagCount = 0; //Reset user flag count
+        this.actualFlaggedBombCount = 0; //Reset actual flagged bomb count
+        this.flaggedTiles = []; //Reset flagged tiles
+        this.isLeftClicked = false; //Reset first left click gate
+        UI.updateRemainingMinesLabel(this.userFlagCount);
+    }
+
+    /**
+     * Initializes event listeners for user interactions.
+     * Ensures no duplicate bindings.
+     */
+    _initEventListeners() {
+        // Remove event listeners if they exist (to prevent multiple listeners being added)
+        document.removeEventListener('click', this._handleLeftClick.bind(this));
+        document.removeEventListener('contextmenu', this._handleRightClick.bind(this));
+
+        // Add Event Listeners
+        document.addEventListener('click', this._handleLeftClick.bind(this));
+        document.addEventListener('contextmenu', this._handleRightClick.bind(this));
+    }
+
+    /**
+     * Begins the main game "loop" handling user interactions and game state
+     * Initializes the game and adds event listeners for user interactions
+     */
+    play() {
+        this._init();
+        this._initEventListeners();
+    }
+
+    /**
+     * Starts the game by generating the board and initializing game variables
+     */
+    startGame() {
+        UI.setGameStatus("There will be " + UI.bombAmountInput.value + " bombs. The Game Is Now In Progress, Good Luck!"); // Tell the user the amount of bombs and say the game has begun
+        UI.pageGame.style.display = 'block'; //Show the game menu
+        UI.pagePreGame.style.display = 'none'; //Hide the pregame menu
+        this.generate(); //generate the x by x board
+        this.play(); //start the actual game
+    }
 
     /**
      * Checks if the win condition is met
@@ -35,17 +79,6 @@ class Game {
         // If the number of flagged tiles equals the number of bomb tiles, and all bomb tiles are flagged, return true
         // TODO: this is a bad way to check win condition.
         return (this.actualFlaggedBombCount === this.bombTiles.length);
-    }
-
-    /**
-     * Starts the game by generating the board and initializing game variables
-     */
-    startGame() {
-        UI.setGameStatus("There will be " + UI.bombAmountInput.value + " bombs. The AI bot is " + (this.isAiEnabled ? "enabled" : "disabled") + " (difficulty: " + difficultyToString(this.difficulty) + "). The Game Is Now In Progress, Good Luck!"); // Tell the user the amount of bombs and say the game has begun
-        UI.PAGE_GAME_MENU.style.display = 'block'; //Show the game menu
-        UI.PAGE_PREGAME_MENU.style.display = 'none'; //Hide the pregame menu
-        this.generate(); //generate the x by x board
-        this.playGame(); //start the actual game
     }
 
     /**
@@ -96,41 +129,6 @@ class Game {
             // Check for empty tiles to reveal recursively
             if (neighborTile.value == 0) this.revealAdjacentTiles(neighborTile);
         }
-    }
-
-    /**
-     * Initializes game variables for a new game
-     */
-    _initGame() {
-        this.state = STATE_ACTIVE_GAME; //Set the game as Active
-        this.userFlagCount = 0; //Reset user flag count
-        this.actualFlaggedBombCount = 0; //Reset actual flagged bomb count
-        this.flaggedTiles = []; //Reset flagged tiles
-        this.isLeftClicked = false; //Reset first left click gate
-        UI.updateRemainingMinesLabel(this.userFlagCount);
-    }
-
-    /**
-     * Initializes event listeners for user interactions.
-     * Ensures no duplicate bindings.
-     */
-    _initEventListeners() {
-        // Remove event listeners if they exist (to prevent multiple listeners being added)
-        document.removeEventListener('click', this._handleLeftClick.bind(this));
-        document.removeEventListener('contextmenu', this._handleRightClick.bind(this));
-
-        // Add Event Listeners
-        document.addEventListener('click', this._handleLeftClick.bind(this));
-        document.addEventListener('contextmenu', this._handleRightClick.bind(this));
-    }
-
-    /**
-     * Main game "loop" handling user interactions and game state
-     * Initializes the game and adds event listeners for user interactions
-     */
-    playGame() {
-        this._initGame();
-        this._initEventListeners();
     }
 
     /**
@@ -261,13 +259,13 @@ class Game {
         }
 
         // Check if tile is already flagged
-        if (tile.flagged == false) { 
-            this._handleRightClickAddFlag(tile);
+        if (tile.flagged == true) { 
+            this._handleRightClickRemoveFlag(tile);
             return;
         }
         
         // Otherwise, remove the flag
-        this._handleRightClickRemoveFlag(tile);
+        this._handleRightClickAddFlag(tile);
     }
 
     /**
@@ -304,7 +302,6 @@ class Game {
         }
     }
 
-    ///======== Game Logic Function
     /**
      * Ends the game and reveals all bombs if the player loses.
      * @param {*} condition 

@@ -15,6 +15,13 @@ const COL_COUNT = ROW_COUNT; // Number of columns in the game grid (for now, a s
 const ALPHABET = "abcdefghijklmnopqrstuvwxyz".toUpperCase(); // The alphabet in uppercase
 const HORSE_IMAGE_PATH = '../assets/images/horse.webp'; // Path to the horse image
 
+// Page "Enum"
+const PAGE_MAIN = 0; // Main Page
+const PAGE_GAME = 1; // Game Page
+const PAGE_OPTION = 2; // Options Page
+const PAGE_CREDIT = 3; // Credits Page
+const PAGE_PREGAME = 4; // Pre-Game Page
+
 // State "Enum"
 const STATE_MAIN_MENU = 0; // Main Menu State
 const STATE_ACTIVE_GAME = 1; // Active Game State
