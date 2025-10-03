@@ -29,6 +29,11 @@ class Game {
     currentTurn = TURN_PLAYER; // Whose turn it is (player starts)
     turnBasedMode = false; // Whether turn-based mode is enabled
     onAITurnCallback = null; // Callback function to execute AI turns
+    
+    // Timer properties
+    gameStartTime = null; // When the game started
+    gameTimer = null; // Timer interval reference
+    gameTimeElapsed = 0; // Total time elapsed in seconds
 
     /**
      * Initializes game variables for a new game
@@ -43,6 +48,11 @@ class Game {
         // Initialize turn-based system
         this.currentTurn = TURN_PLAYER; // Player always starts
         this.turnBasedMode = UI.checkboxEnableAI.checked; // Check if AI is enabled
+        
+        // Initialize timer
+        this.gameTimeElapsed = 0;
+        this.gameStartTime = null;
+        this.gameTimer = null;
         
         UI.updateRemainingMinesLabel(this.userFlagCount);
     }
@@ -329,6 +339,9 @@ class Game {
         this.adjacentFCTiles = this._adjacentTiles(tile); //Get all adjacent tiles to the first clicked tile
         this.loadBomb(tile); //generate all bombs on the board
         this.calculateTileNumbers(); //calculate the numbers for each tile
+        
+        // Start the timer on first click
+        this.startTimer();
     }
 
     /**
@@ -507,28 +520,31 @@ class Game {
     endGame(condition) {
         this.state = STATE_GAME_OVER; // Set game state to over
         
+        // Stop the timer when game ends
+        this.stopTimer();
+        
         switch (condition) {
             case END_LOSE:
                 if (this.turnBasedMode) {
                     if (this.currentTurn === TURN_AI) {
-                        UI.setGameStatus("CONGRATULATIONS! AI hit a bomb! You Win!");
+                        UI.setGameStatus(`CONGRATULATIONS! AI hit a bomb! You Win! (Time: ${this.gameTimeElapsed}s)`);
                     } else {
-                        UI.setGameStatus("GAME OVER! You hit a bomb!");
+                        UI.setGameStatus(`GAME OVER! You hit a bomb! (Time: ${this.gameTimeElapsed}s)`);
                     }
                 } else {
-                    UI.setGameStatus("GAME OVER! You hit a bomb!");
+                    UI.setGameStatus(`GAME OVER! You hit a bomb! (Time: ${this.gameTimeElapsed}s)`);
                 }
                 this._revealAllBombs(); // Reveal all bombs
                 break;
             case END_WIN:
                 if (this.turnBasedMode) {
                     if (this.currentTurn === TURN_AI) {
-                        UI.setGameStatus("AI WINS! All bombs found by AI!");
+                        UI.setGameStatus(`AI WINS! All bombs found by AI! (Time: ${this.gameTimeElapsed}s)`);
                     } else {
-                        UI.setGameStatus("CONGRATULATIONS! YOU WIN!");
+                        UI.setGameStatus(`CONGRATULATIONS! YOU WIN! (Time: ${this.gameTimeElapsed}s)`);
                     }
                 } else {
-                    UI.setGameStatus("CONGRATULATIONS! YOU WIN!");
+                    UI.setGameStatus(`CONGRATULATIONS! YOU WIN! (Time: ${this.gameTimeElapsed}s)`);
                 }
                 break;
             default:
@@ -613,5 +629,36 @@ class Game {
     generate() {
         this._generateColumnHeaders(); // Generate column headers
         this._generateRows(); // Generate rows and tiles
+    }
+
+    /**
+     * Starts the game timer
+     */
+    startTimer() {
+        if (this.gameTimer) return; // Timer already running
+        
+        this.gameStartTime = Date.now();
+        this.gameTimer = setInterval(() => {
+            this.gameTimeElapsed = Math.floor((Date.now() - this.gameStartTime) / 1000);
+            UI.updateTimerDisplay(this.gameTimeElapsed);
+        }, 1000); // Update every second
+    }
+
+    /**
+     * Stops the game timer
+     */
+    stopTimer() {
+        if (this.gameTimer) {
+            clearInterval(this.gameTimer);
+            this.gameTimer = null;
+        }
+    }
+
+    /**
+     * Gets the current game time in seconds
+     * @returns {number} The elapsed time in seconds
+     */
+    getGameTime() {
+        return this.gameTimeElapsed;
     }
 }

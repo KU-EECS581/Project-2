@@ -74,8 +74,10 @@ The outputs are the visual display of the game, as well as text prompts to the u
 
             <!-- Game Page -->
             <div id="pageGame">
-                <div id="mineFlagStatus"></div>
-                <span id="labelMineAmount"><img src="../assets/images/bomb.png"> <span id="labelMineNum"></span></span>
+                <div id="mineFlagStatus">
+                    <span id="labelMineAmount"><img src="../assets/images/bomb.png"> <span id="labelMineNum"></span></span>
+                    <span id="labelTimer">Timer: <span id="labelTimeNum">0s</span></span>
+                </div>
                 <div id="divBoard"></div>
                 <button id="buttonReset" onclick="APP.reset()"> Reset </button>
             </div>

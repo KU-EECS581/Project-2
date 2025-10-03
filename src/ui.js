@@ -42,6 +42,7 @@ class UIManager {
     labelGameStatus = document.getElementById("labelGameStatus");
     msTiles = document.querySelectorAll("#msTile");
     labelMineNum = document.getElementById("labelMineNum");
+    labelTimeNum = document.getElementById("labelTimeNum");
 
     // Theme
     currentTheme = THEME_DEFAULT;
@@ -100,6 +101,24 @@ class UIManager {
     updateRemainingMinesLabel(userFlagCount = 0) {
         const remaining = Math.max(0, parseInt(this.bombAmountInput.value, 10) - userFlagCount); // Calculate the remaining mines
         this.labelMineNum.innerHTML = remaining; // Update the labelMineNum element
+    }
+
+    /**
+     * Updates the timer display
+     * @param {number} timeInSeconds The time elapsed in seconds
+     */
+    updateTimerDisplay(timeInSeconds) {
+        if (this.labelTimeNum) {
+            // Format time as minutes and seconds
+            const minutes = Math.floor(timeInSeconds / 60);
+            const seconds = timeInSeconds % 60;
+            
+            if (minutes > 0) {
+                this.labelTimeNum.innerHTML = `${minutes}m ${seconds.toString().padStart(2, '0')}s`;
+            } else {
+                this.labelTimeNum.innerHTML = `${seconds}s`;
+            }
+        }
     }
 
     /**
