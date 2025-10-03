@@ -80,9 +80,23 @@ class AI {
      * Private method for easy difficulty move
      */
     _easyMove() {
-        // TODO: Easy difficulty AI logic (ensure all requirements are met)
-        // For now, make a simple random move on an unrevealed, unflagged tile
-        this._makeRandomMove();
+        // Ask the game object for all tiles that are still hidden and not flagged
+        const candidates = this.game.getAvailableTiles();
+
+        // If there are no valid moves left, exit
+        if (!Array.isArray(candidates) || candidates.length === 0) {
+            console.warn("AI(Easy): No available moves");
+            return;
+        }
+
+        // Pick a random index within the candidates array
+        const idx = Math.floor(Math.random() * candidates.length);
+
+        // Grab the tiel object that is at the index
+        const tile = candidates[idx];
+
+        // MAke a left click on the tile
+        this._makeLeftClick(tile);
     }
 
     /**
