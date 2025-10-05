@@ -32,33 +32,49 @@ class App {
     }
 
     /**
-     * Starts the start button being clicked
-     * @returns {void}
+     * Sets the game options based on UI inputs.
+     * @returns True if game options are set correctly, false otherwise
      */
-    handleStartClicked() {
+    _handleSetGameOptions() {
         let bombValue = UI.bombAmountInput.value; // Get the value of the bomb amount input
         if (bombValue < MIN_BOMBS || bombValue > MAX_BOMBS) { // Check if the bomb amount is out of range
             alert(`Please select a bomb value between ${MIN_BOMBS} and ${MAX_BOMBS}.`); // Alert the user
             UI.disablePlayButton();
             UI.setGameStatus(`Please select a bomb value between ${MIN_BOMBS} and ${MAX_BOMBS}.`); // Update the notification
-            return; // Exit the function if the bomb amount is invalid
+            return false; // Exit the function if the bomb amount is invalid
         }
 
         // Zhang: Add a check to ensure bomb amount is within requirement
         UI.enablePlayButton(); // Enable Play Button
         UI.bombAmountInput.style.display = 'none'; // Hide the bomb input
         UI.buttonStart.style.display = 'none'; // Hide the start button
-        
+
         // Initialize AI state properly when starting the game
         this.ai.isEnabled = UI.checkboxEnableAI.checked;
         this.ai.updateDifficulty();
-        
+
         // Register AI turn callback for proper separation of concerns
         this.game.setAITurnCallback(() => {
             this.ai.makeMove();
         });
+
+        return true; // Return true if the bomb amount is valid
+    }
+
+    /**
+     * Starts the start button being clicked
+     * @returns {void}
+     */
+    handleStartClicked() {
+        if (!this._handleSetGameOptions()) return; // Set game options
         
         this.game.startGame(); // Start the game
+    }
+
+    handleAutoSolveClicked() {
+        if (!this._handleSetGameOptions()) return; // Set game options
+
+        this.game.autoSolve(); // Auto-solve the game
     }
 
     /**

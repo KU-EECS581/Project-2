@@ -29,6 +29,7 @@ class UIManager {
     buttonCredit = document.getElementById("buttonCredit");
     buttonTheme = document.getElementById("buttonTheme");
     buttonStart = document.getElementById("buttonStart");
+    buttonAutoSolve = document.getElementById("buttonAutoSolve");
     buttonReset = document.getElementById("buttonReset");
 
     // Options elements
@@ -64,6 +65,20 @@ class UIManager {
      */
     enablePlayButton() {
         this.buttonPlay.disabled = false;
+    }
+
+    /**
+     * Disables the solve button
+     */
+    disableSolveButton() {
+        this.buttonAutoSolve.disabled = true;
+    }
+
+    /**
+     * Enables the solve button
+     */
+    enableSolveButton() {
+        this.buttonAutoSolve.disabled = false;
     }
 
     /**
