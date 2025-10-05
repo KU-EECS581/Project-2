@@ -105,6 +105,17 @@ class AI {
     _mediumMove() {
         // TODO: Medium difficulty AI logic (ensure all requirements are met)
         // For now, make a simple random move on an unrevealed, unflagged tile
+        const availableTiles = this.game.getAvailableTiles();
+        if ( availableTiles.length === 0 ) {
+            console.warn( "AI: No available moves" );
+            return;
+        }
+
+        const constraints = [];
+
+        for ( let i = 0; i < this.game.board.size; i++ ) {
+
+        }
         this._makeRandomMove();
     }
 
