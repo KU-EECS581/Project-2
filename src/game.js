@@ -71,23 +71,48 @@ class Game {
         document.addEventListener('contextmenu', this._handleRightClick.bind(this));
     }
 
+    _initBoard() {
+        UI.setGameStatus("There will be " + UI.bombAmountInput.value + " bombs. The Game Is Now In Progress, Good Luck!"); // Tell the user the amount of bombs and say the game has begun
+        UI.pageGame.style.display = 'block'; //Show the game menu
+        UI.pagePreGame.style.display = 'none'; //Hide the pregame menu
+        this.generate(); //generate the x by x board
+    }
+
     /**
      * Begins the main game "loop" handling user interactions and game state
      * Initializes the game and adds event listeners for user interactions
      */
     play() {
         this._init();
+        this._initBoard();
         this._initEventListeners();
+    }
+
+    /**
+     * Automatically solves the current game using the AI logic
+     */
+    autoSolve() {
+        //if (!this.turnBasedMode) return; // No auto-solving if not in turn-based mode
+
+        this._init();
+        this._initBoard(); // Initialize the board display
+        this.currentTurn = TURN_AI; // Start with AI's turn if auto-solving
+
+        // Execute AI moves until the game is over
+        const aiMoveInterval = setInterval(() => {
+            if (this.state !== STATE_ACTIVE_GAME) {
+                clearInterval(aiMoveInterval); // Stop if the game is over
+                return;
+            }
+            this.switchTurn(); // Switch to AI's turn
+            this._executeAITurn(); // Execute AI's turn
+        }, AI_MOVE_DELAY_MS);
     }
 
     /**
      * Starts the game by generating the board and initializing game variables
      */
     startGame() {
-        UI.setGameStatus("There will be " + UI.bombAmountInput.value + " bombs. The Game Is Now In Progress, Good Luck!"); // Tell the user the amount of bombs and say the game has begun
-        UI.pageGame.style.display = 'block'; //Show the game menu
-        UI.pagePreGame.style.display = 'none'; //Hide the pregame menu
-        this.generate(); //generate the x by x board
         this.play(); //start the actual game
         
         // Initialize turn display if in turn-based mode
@@ -627,6 +652,7 @@ class Game {
 
             for (let j = 0; j < ROW_COUNT; j++) {
                 const msButton = document.createElement('button'); // Create buttons k times
+                msButton.classList.add('tile');
                 msButton.id = "msTile-"+idNum;// assign unique ID for tracking
                 // msButton.value = 0; // Set initial value, 0 is a bomb/empty tile, and then 1-3 for amount of bombs around it
                 msButton.bomb = false;

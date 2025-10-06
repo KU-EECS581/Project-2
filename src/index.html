@@ -58,7 +58,7 @@ The outputs are the visual display of the game, as well as text prompts to the u
                 </li>
                 <li>
                     <label for="checkboxEnableAI">Enable AI Bot:</label>
-                    <input id="checkboxEnableAI" name="checkboxEnableAI" type="checkbox" value="false" onchange="APP.ai.toggle()"> </input>
+                    <input id="checkboxEnableAI" checked="false" name="checkboxEnableAI" type="checkbox" value="false" onchange="APP.ai.toggle()"> </input>
                 </li>
                 <li> 
                     <label for="dropdownDifficultyAI">AI Difficulty:</label>
@@ -69,6 +69,7 @@ The outputs are the visual display of the game, as well as text prompts to the u
                     </select> 
                 </li>
                 <br/>
+                <button id="buttonAutoSolve" onclick="APP.handleAutoSolveClicked()" disabled>Auto-Solve</button> 
                 <button id="buttonStart" onclick="APP.handleStartClicked()">Start</button> 
             </div>
 

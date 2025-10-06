@@ -34,7 +34,7 @@ input { width: 50px; height: 40px; }
 #creditPage button { width: 150px; height: 50px; font-family: cursive; }
 #gamePage #backButton { width: 250px; height: 50px; font-family: cursive; }
 #gamePage #resetButton { width: 250px; height: 50px; font-family: cursive; }
-button { width: 50px; height: 50px; }
+button { width: 100px; height: 50px; }
 
 /* Other Styles */
 #mineFlagStatus { display: flex; gap: 20px; justify-content: center; align-items: center;}
@@ -55,7 +55,7 @@ button { width: 50px; height: 50px; }
     #creditPage button { width: 150px; height: 50px; font-family: cursive; background-color:gray; color:white; }
     #gamePage #backButton { width: 250px; height: 50px; font-family: cursive; background-color:gray; color:white; }
     #gamePage #resetButton { width: 250px; height: 50px; font-family: cursive; background-color:gray; color:white; }
-    button { width: 50px; height: 50px; background-color:lightgray }
+    button { width: 100px; height: 50px; background-color:lightgray }
 }
 
 .classic-mode {
@@ -66,11 +66,12 @@ button { width: 50px; height: 50px; }
     #creditPage button { width: 150px; height: 50px; font-family: sans-serif; background-color:lightgray; color:black; }
     #gamePage #backButton { width: 250px; height: 50px; font-family: sans-serif; background-color:lightgray; color:black; }
     #gamePage #resetButton { width: 250px; height: 50px; font-family: sans-serif; background-color:lightgray; color:black; }
-    button { width: 50px; height: 50px; }
+    button { width: 100px; height: 50px; }
 }
 
 /* Tile Styles */
 
+.tile { width: 50px; height: 50px; }
 .flagged { background-image: url('../assets/images/flag.png'); }
 .revealed-0 { background-color:rgb(197, 197, 197) }
 .revealed-1 { background-image: url('../assets/images/1.png'); background-color:rgb(197, 197, 197) }
@@ -84,6 +85,7 @@ button { width: 50px; height: 50px; }
 .bomb { background-image: url('../assets/images/bomb.png'); background-color:rgb(197, 197, 197) }
 
 .dark-mode {
+    .tile { width: 50px; height: 50px; }
     .flagged { background-image: url('../assets/images/flag.png'); }
     .revealed-0 { background-color:gray }
     .revealed-1 { background-image: url('../assets/images/1.png'); background-color:gray }
@@ -98,6 +100,7 @@ button { width: 50px; height: 50px; }
 }
 
 .classic-mode {
+    .tile { width: 50px; height: 50px; }
     .flagged { background-image: url('../assets/images/classic_theme/c_flag.png'); background-size: 100%; }
     .revealed-0 { background-color:gray }
     .revealed-1 { background-image: url('../assets/images/classic_theme/c_1.png'); background-size: 100%; background-color:rgb(197, 197, 197) }

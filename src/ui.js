@@ -29,6 +29,7 @@ class UIManager {
     buttonCredit = document.getElementById("buttonCredit");
     buttonTheme = document.getElementById("buttonTheme");
     buttonStart = document.getElementById("buttonStart");
+    buttonAutoSolve = document.getElementById("buttonAutoSolve");
     buttonReset = document.getElementById("buttonReset");
 
     // Options elements
@@ -50,6 +51,7 @@ class UIManager {
     constructor() {
         // Initialize AI checkbox to unchecked state
         this.checkboxEnableAI.checked = false;
+        this.buttonAutoSolve.checked = false;
     }
     
     /**
@@ -67,6 +69,20 @@ class UIManager {
     }
 
     /**
+     * Disables the solve button
+     */
+    disableSolveButton() {
+        this.buttonAutoSolve.disabled = true;
+    }
+
+    /**
+     * Enables the solve button
+     */
+    enableSolveButton() {
+        this.buttonAutoSolve.disabled = false;
+    }
+
+    /**
      * Handles changes to the AI checkbox.
      * Disables/enables the AI difficulty dropdown based on checkbox state.
      * @param {*} event 
@@ -75,8 +91,17 @@ class UIManager {
     handleEnabledAICheckboxChanged() {
         const isChecked = this.checkboxEnableAI.checked;
         this.dropdownDifficultyAI.disabled = !isChecked;
+        this.buttonAutoSolve.disabled = !isChecked; // Disable solve button if AI is not enabled
+        this.buttonStart.textContent = isChecked ? "Start (versus AI)" : "Start";
 
         return isChecked;
+    }
+
+    /**
+     * Disables the AI difficulty dropdown
+     */
+    disableDifficultyDropdown() {
+        this.dropdownDifficultyAI.disabled = true;
     }
 
     /**
