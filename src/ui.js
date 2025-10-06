@@ -51,6 +51,7 @@ class UIManager {
     constructor() {
         // Initialize AI checkbox to unchecked state
         this.checkboxEnableAI.checked = false;
+        this.buttonAutoSolve.checked = false;
     }
     
     /**
@@ -90,8 +91,17 @@ class UIManager {
     handleEnabledAICheckboxChanged() {
         const isChecked = this.checkboxEnableAI.checked;
         this.dropdownDifficultyAI.disabled = !isChecked;
+        this.buttonAutoSolve.disabled = !isChecked; // Disable solve button if AI is not enabled
+        this.buttonStart.textContent = isChecked ? "Start (versus AI)" : "Start";
 
         return isChecked;
+    }
+
+    /**
+     * Disables the AI difficulty dropdown
+     */
+    disableDifficultyDropdown() {
+        this.dropdownDifficultyAI.disabled = true;
     }
 
     /**

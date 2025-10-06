@@ -163,6 +163,8 @@ class App {
      * Just a wrapper for reloading the page.
      */
     reset() {
+        UI.disableSolveButton();
+        UI.disableDifficultyDropdown();
         window.location.reload() //Reload the page
     }
     

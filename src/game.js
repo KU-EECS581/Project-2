@@ -633,6 +633,7 @@ class Game {
 
             for (let j = 0; j < ROW_COUNT; j++) {
                 const msButton = document.createElement('button'); // Create buttons k times
+                msButton.classList.add('tile');
                 msButton.id = "msTile-"+idNum;// assign unique ID for tracking
                 // msButton.value = 0; // Set initial value, 0 is a bomb/empty tile, and then 1-3 for amount of bombs around it
                 msButton.bomb = false;
