@@ -318,6 +318,25 @@ class Game {
     }
 
     /**
+     * Public method for AI to get all adjacent tile elements for a given tile
+     * @param {*} tile The tile element to find neighbors for
+     * @returns {Array} Array of adjacent tile elements
+     */
+    getAdjacentTiles(tile) {
+        const indices = this._adjacentTiles(tile);
+        const adjacentTiles = [];
+        
+        for (const index of indices) {
+            const adjacentTile = document.getElementById("msTile-" + index);
+            if (adjacentTile) {
+                adjacentTiles.push(adjacentTile);
+            }
+        }
+        
+        return adjacentTiles;
+    }
+
+    /**
      * Reveals all adjacent tiles recursively if they are not bombs.
      * Zhang: implementation for revealing adjacent tile, logic is similar to calculateTileNumbers, but this time use recursive to keep revealing tiles until all safe tiles are uncovered
      * @param {*} tile
