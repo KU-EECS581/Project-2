@@ -126,9 +126,12 @@ class Game {
      * @returns true if the win condition is met, false otherwise
      */
     isWin() {
-        // If the number of flagged tiles equals the number of bomb tiles, and all bomb tiles are flagged, return true
-        // TODO: this is a bad way to check win condition.
-        return (this.actualFlaggedBombCount === this.bombTiles.length);
+        // Win if all safe tiles revealed OR all bombs correctly flagged (and no extra flags)
+        const totalSafe = this.boardSize - this.bombTiles.length;
+        if (this.revealedSafeTileCount === totalSafe) return true;
+        if (this.flaggedTiles.length === this.bombTiles.length &&
+            this.actualFlaggedBombCount === this.bombTiles.length) return true;
+        return false;
     }
 
     /**
