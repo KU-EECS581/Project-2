@@ -34,16 +34,28 @@ class AI {
             return;
         }
 
+        // Convert dropdown value to number and add debugging
+        const dropdownValue = UI.dropdownDifficultyAI.value;
+        const numericValue = parseInt(dropdownValue);
+        console.log(`AI: Dropdown value: "${dropdownValue}" (type: ${typeof dropdownValue}), parsed: ${numericValue}`);
+
         // Switch case to set the difficulty based on dropdown value
-        switch (UI.dropdownDifficultyAI.value) {
+        switch (numericValue) {
             case DIFFICULTY_EASY:
                 this.difficulty = DIFFICULTY_EASY;
+                console.log("AI: Set difficulty to EASY");
                 break;
             case DIFFICULTY_MEDIUM:
                 this.difficulty = DIFFICULTY_MEDIUM;
+                console.log("AI: Set difficulty to MEDIUM");
                 break;
             case DIFFICULTY_HARD:
                 this.difficulty = DIFFICULTY_HARD;
+                console.log("AI: Set difficulty to HARD");
+                break;
+            default:
+                console.warn(`AI: Unknown difficulty value: ${dropdownValue}, defaulting to EASY`);
+                this.difficulty = DIFFICULTY_EASY;
                 break;
         }
     }
@@ -58,6 +70,8 @@ class AI {
         
         // AI logic to make a move
         if (!this.isEnabled || this.game.state !== STATE_ACTIVE_GAME) return;
+
+        console.log(`AI: Making move at difficulty ${this.difficulty}`);
 
         switch (this.difficulty) {
             case DIFFICULTY_EASY:
@@ -101,22 +115,56 @@ class AI {
 
     /**
      * Private method for medium difficulty move
+     * Implements the following rules:
+     * 1. If # of adjacent hidden cells == # of cell (minus flags), flag all those hidden adjacent cells
+     * 2. If # of flagged adjacent cells equals a cell's number, open all other hidden neighbors
+     * 3. Otherwise, pick a random unflagged hidden cell (fallback to easy AI)
      */
     _mediumMove() {
-        // TODO: Medium difficulty AI logic (ensure all requirements are met)
-        // For now, make a simple random move on an unrevealed, unflagged tile
-        const availableTiles = this.game.getAvailableTiles();
-        if ( availableTiles.length === 0 ) {
-            console.warn( "AI: No available moves" );
-            return;
+        console.log("AI: Making medium difficulty move...");
+        
+        // Iterate through all tiles looking for revealed numbered tiles
+        for (let i = 0; i < this.game.boardSize; i++) {
+            const tile = document.getElementById("msTile-" + i);
+            
+            // Convert tile.value to number (in case it's stored as string)
+            const tileValue = parseInt(tile.value) || 0;
+            
+            // Skip if not a revealed numbered tile
+            if (!tile || !tile.revealed || tile.bomb || tileValue === 0) continue;
+            
+            // Debug logging to see what we're working with
+            console.log(`AI: Examining tile ${i} - value: "${tile.value}" (type: ${typeof tile.value}), parsed: ${tileValue}`);
+            
+            // Get all neighbors of this numbered tile
+            const neighbors = this.game.getAdjacentTiles(tile);
+            
+            // Categorize the neighbors
+            const flaggedNeighbors = neighbors.filter(n => n.flagged);
+            const hiddenNeighbors = neighbors.filter(n => !n.revealed && !n.flagged);
+            
+            const flaggedCount = flaggedNeighbors.length;
+            const hiddenCount = hiddenNeighbors.length;
+            const remainingBombs = tileValue - flaggedCount;
+                        
+            // Rule 1: If # of adjacent hidden cells == # of cell (minus flags), flag all those hidden adjacent cells
+            if (hiddenCount === remainingBombs && remainingBombs > 0) {
+                console.log(`AI: Rule 1 - Flagging ${hiddenCount} hidden neighbors of tile ${i}`);
+                this._makeRightClick(hiddenNeighbors[0]);
+                return; // Make one move at a time
+            }
+            
+            // Rule 2: If # of flagged adjacent cells equals a cell's number, open all other hidden neighbors
+            if (flaggedCount === tileValue && hiddenCount > 0) {
+                console.log(`AI: Rule 2 - Opening ${hiddenCount} safe neighbors of tile ${i} (tile value: ${tileValue})`);
+                this._makeLeftClick(hiddenNeighbors[0]);
+                return; // Make one move at a time
+            }
         }
-
-        const constraints = [];
-
-        for ( let i = 0; i < this.game.board.size; i++ ) {
-
-        }
-        this._makeRandomMove();
+        
+        // Rule 3: No smart moves found, fall back to easy AI (random move)
+        console.log("AI: No smart moves found, making random move");
+        this._easyMove();
     }
 
     /**
